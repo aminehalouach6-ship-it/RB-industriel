@@ -26,7 +26,9 @@ import {
   Eye,
   EyeOff,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { 
   fetchProducts, 
@@ -39,7 +41,8 @@ import {
   updateProduct, 
   deleteProduct,
   fetchQuotes,
-  adminLogin
+  adminLogin,
+  uploadProductImage
 } from '../services/api';
 import { Link } from 'react-router-dom';
 
@@ -120,9 +123,35 @@ export default function AdminPage() {
 
   const [productForm, setProductForm] = useState(initialProductState);
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleFileUpload = async (file, isEdit = false) => {
+    if (!file) return;
+    setUploadError('');
+    setUploadingImage(true);
+    try {
+      const res = await uploadProductImage(file);
+      if (res.success && res.url) {
+        if (isEdit) {
+          setEditingProduct(prev => ({ ...prev, image_url: res.url }));
+        } else {
+          setProductForm(prev => ({ ...prev, image_url: res.url }));
+        }
+        showToast("Photo importée avec succès sur le serveur Docker !");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      setUploadError(err.message || "Erreur lors de l'importation de la photo");
+      showToast("Erreur lors de l'importation de la photo");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleLogin = async (e) => {
@@ -1016,35 +1045,121 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Preset Image Chooser */}
-              <div>
-                <label className="font-bold block mb-1">Sélection Rapide d'Image Préconfigurée</label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {PRESET_IMAGES.map((img, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setProductForm({ ...productForm, image_url: img.url })}
-                      className={`p-1.5 rounded-xl border text-[10px] font-bold text-center truncate transition cursor-pointer ${
-                        productForm.image_url === img.url 
-                          ? 'bg-[#0D3823] text-white border-[#0D3823]' 
-                          : 'bg-[#FAF7F2] border-[#E8E1D5] text-[#4B574F] hover:bg-white'
-                      }`}
-                    >
-                      {img.label}
-                    </button>
-                  ))}
+              {/* Image Upload & Selection Block */}
+              <div className="space-y-3 p-3.5 bg-[#FAF7F2] rounded-2xl border border-[#E8E1D5]">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-[#141E18] flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-[#0D3823]" />
+                    <span>Photo du Produit</span>
+                  </label>
+                  {productForm.image_url && (
+                    <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">
+                      ✓ Photo prête
+                    </span>
+                  )}
                 </div>
-              </div>
 
-              <div>
-                <label className="font-bold block mb-1">URL Image Personnalisée</label>
-                <input
-                  type="text"
-                  value={productForm.image_url}
-                  onChange={e => setProductForm({ ...productForm, image_url: e.target.value })}
-                  className="w-full p-2 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none font-mono text-[10px]"
-                />
+                {/* Direct File Upload from Computer / Device */}
+                <div className="space-y-2">
+                  <label className="flex flex-col sm:flex-row items-center justify-center gap-3 p-4 bg-white hover:bg-[#F4EFE7] border-2 border-dashed border-[#0D3823]/35 hover:border-[#0D3823] rounded-2xl cursor-pointer transition group shadow-xs">
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) handleFileUpload(e.target.files[0], false);
+                      }}
+                      disabled={uploadingImage}
+                    />
+                    <div className="w-10 h-10 rounded-full bg-[#EBF4EE] text-[#0D3823] flex items-center justify-center shrink-0 group-hover:scale-110 transition">
+                      {uploadingImage ? (
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Upload className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <p className="font-bold text-xs text-[#141E18]">
+                        {uploadingImage ? "Téléversement vers Docker en cours..." : "Cliquez pour importer une photo depuis votre appareil"}
+                      </p>
+                      <p className="text-[10px] text-[#637067]">
+                        Formats acceptés : JPG, PNG, WEBP, SVG (Max 10 Mo) • Sauvegarde automatique sur Docker
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Thumbnail Preview */}
+                  {productForm.image_url && (
+                    <div className="flex items-center gap-3 p-2 bg-white rounded-xl border border-[#E8E1D5]">
+                      <div className="w-12 h-12 rounded-lg border border-[#E8E1D5] overflow-hidden bg-[#FAF7F2] shrink-0">
+                        <img
+                          src={productForm.image_url}
+                          alt="Aperçu photo"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold text-[#141E18] truncate">
+                          {productForm.image_url.startsWith('/api/uploads/') ? "Photo importée sur le serveur" : "Image configurée"}
+                        </p>
+                        <p className="text-[10px] font-mono text-[#637067] truncate">
+                          {productForm.image_url}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setProductForm({ ...productForm, image_url: '' })}
+                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg text-xs"
+                        title="Supprimer la photo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {uploadError && (
+                    <p className="text-[11px] text-red-600 font-medium bg-red-50 p-2 rounded-lg border border-red-200">
+                      {uploadError}
+                    </p>
+                  )}
+                </div>
+
+                {/* Saisie d'URL Personnalisée */}
+                <div className="pt-1">
+                  <label className="font-bold block mb-1 text-[#637067] text-[11px]">
+                    Ou coller une URL d'image personnalisée :
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="https://... ou /api/uploads/..."
+                    value={productForm.image_url}
+                    onChange={e => setProductForm({ ...productForm, image_url: e.target.value })}
+                    className="w-full p-2 bg-white border border-[#E8E1D5] rounded-xl outline-none font-mono text-[10px] focus:border-[#0D3823]"
+                  />
+                </div>
+
+                {/* Presets */}
+                <div>
+                  <span className="text-[10px] text-[#637067] font-semibold block mb-1">
+                    Ou sélectionner une photo préconfigurée :
+                  </span>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {PRESET_IMAGES.map((img, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setProductForm({ ...productForm, image_url: img.url })}
+                        className={`p-1.5 rounded-xl border text-[10px] font-bold text-center truncate transition cursor-pointer ${
+                          productForm.image_url === img.url 
+                            ? 'bg-[#0D3823] text-white border-[#0D3823]' 
+                            : 'bg-white border-[#E8E1D5] text-[#4B574F] hover:bg-[#FAF7F2]'
+                        }`}
+                      >
+                        {img.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -1147,7 +1262,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 py-2">
+              <div className="flex items-center gap-4 py-1">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -1157,6 +1272,91 @@ export default function AdminPage() {
                   />
                   <span className="font-bold">En Stock (Tit Mellil)</span>
                 </label>
+              </div>
+
+              {/* Photo Upload & Preview for Edit Modal */}
+              <div className="space-y-3 p-3.5 bg-[#FAF7F2] rounded-2xl border border-[#E8E1D5]">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-[#141E18] flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-[#0D3823]" />
+                    <span>Photo du Produit</span>
+                  </label>
+                  {editingProduct.image_url && (
+                    <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-bold">
+                      ✓ Image associée
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex flex-col sm:flex-row items-center justify-center gap-3 p-3.5 bg-white hover:bg-[#F4EFE7] border-2 border-dashed border-[#0D3823]/35 hover:border-[#0D3823] rounded-2xl cursor-pointer transition group shadow-xs">
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) handleFileUpload(e.target.files[0], true);
+                      }}
+                      disabled={uploadingImage}
+                    />
+                    <div className="w-9 h-9 rounded-full bg-[#EBF4EE] text-[#0D3823] flex items-center justify-center shrink-0 group-hover:scale-110 transition">
+                      {uploadingImage ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <p className="font-bold text-xs text-[#141E18]">
+                        {uploadingImage ? "Téléversement vers Docker en cours..." : "Remplacer la photo depuis votre appareil"}
+                      </p>
+                      <p className="text-[10px] text-[#637067]">
+                        Sauvegarde automatique dans le stockage persistant Docker
+                      </p>
+                    </div>
+                  </label>
+
+                  {/* Thumbnail Preview */}
+                  {editingProduct.image_url && (
+                    <div className="flex items-center gap-3 p-2 bg-white rounded-xl border border-[#E8E1D5]">
+                      <div className="w-12 h-12 rounded-lg border border-[#E8E1D5] overflow-hidden bg-[#FAF7F2] shrink-0">
+                        <img
+                          src={editingProduct.image_url}
+                          alt="Aperçu photo"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-bold text-[#141E18] truncate">
+                          {editingProduct.image_url.startsWith('/api/uploads/') ? "Photo importée sur le serveur" : "Image configurée"}
+                        </p>
+                        <p className="text-[10px] font-mono text-[#637067] truncate">
+                          {editingProduct.image_url}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingProduct({ ...editingProduct, image_url: '' })}
+                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg text-xs"
+                        title="Supprimer la photo"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-[#637067] font-semibold block mb-1">
+                    Ou URL personnalisée :
+                  </label>
+                  <input
+                    type="text"
+                    value={editingProduct.image_url || ''}
+                    onChange={e => setEditingProduct({ ...editingProduct, image_url: e.target.value })}
+                    className="w-full p-2 bg-white border border-[#E8E1D5] rounded-xl outline-none font-mono text-[10px] focus:border-[#0D3823]"
+                  />
+                </div>
               </div>
 
               <div>

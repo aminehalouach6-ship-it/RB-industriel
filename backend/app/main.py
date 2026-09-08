@@ -1,10 +1,12 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.database import Base, engine, SessionLocal
 from app.seed_data import seed_database
-from app.api import products, orders, quotes, contact, stats, auth
+from app.api import products, orders, quotes, contact, stats, auth, upload
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,6 +39,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Uploads directory static serving
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 # Register API Routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentification"])
 app.include_router(products.router, prefix="/api/products", tags=["Produits & Catégories"])
@@ -44,6 +52,7 @@ app.include_router(orders.router, prefix="/api/orders", tags=["Commandes"])
 app.include_router(quotes.router, prefix="/api/quotes", tags=["Devis"])
 app.include_router(contact.router, prefix="/api/contact", tags=["Contact & Assistance"])
 app.include_router(stats.router, prefix="/api/stats", tags=["Tableau de bord & Statistiques"])
+app.include_router(upload.router, prefix="/api/upload", tags=["Upload Images"])
 
 @app.get("/api/health", tags=["Système"])
 def health_check():

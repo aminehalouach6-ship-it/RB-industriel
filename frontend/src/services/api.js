@@ -512,3 +512,21 @@ export async function adminLogin(username, password) {
   return await res.json();
 }
 
+export async function uploadProductImage(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE_URL}/upload`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || "Erreur lors du téléversement de l'image.");
+  }
+
+  return await res.json();
+}
+
+
