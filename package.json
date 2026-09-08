@@ -1,0 +1,27 @@
+{
+  "name": "tenira-travaux",
+  "version": "1.0.0",
+  "description": "Plateforme Fullstack E-Commerce & Dashboard Gestion pour TENIRA TRAVAUX (Gaz Industriels & Matériel de Soudage - Tit Mellil)",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "serve": "node server.js",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "keywords": [
+    "tenira",
+    "travaux",
+    "gaz-industriels",
+    "soudage",
+    "inverter",
+    "tit-mellil",
+    "casablanca",
+    "maroc"
+  ],
+  "author": "Rachid BOUZAYD - TENIRA TRAVAUX",
+  "license": "ISC"
+}

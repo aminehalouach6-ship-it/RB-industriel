@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recherche & Filtres • TENIRA TRAVAUX</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="h-full antialiased bg-[#FAF7F2] text-[#141E18] p-4 sm:p-8">
+
+  <div class="max-w-5xl mx-auto space-y-6">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-[#0D3823] text-white flex items-center justify-center font-bold text-xs">
+          TT
+        </div>
+        <span class="font-extrabold text-sm text-[#141E18]">TENIRA TRAVAUX</span>
+      </a>
+      <a href="index.html" class="text-xs font-semibold text-[#C3643B] hover:underline">← Retour Accueil</a>
+    </div>
+
+    <!-- Search Input & Capsule Filter Bar -->
+    <div class="bg-white p-5 rounded-2xl border border-[#E8E1D5] shadow-xs space-y-4">
+      <div class="relative">
+        <input 
+          id="search-input"
+          type="text" 
+          placeholder="Rechercher (ex: Oxygène, Inverter, Argon, Masque)..."
+          oninput="filterItems()"
+          class="w-full pl-10 pr-4 py-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-full text-xs outline-none focus:ring-1 focus:ring-[#0D3823]"
+        >
+        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex flex-wrap gap-2 text-xs">
+        <button onclick="setCat('all')" id="btn-all" class="px-3 py-1.5 rounded-full font-bold bg-[#0D3823] text-white">Tous</button>
+        <button onclick="setCat('gaz')" id="btn-gaz" class="px-3 py-1.5 rounded-full font-bold bg-white text-[#4B574F] border border-[#E8E1D5]">Gaz Industriels</button>
+        <button onclick="setCat('postes')" id="btn-postes" class="px-3 py-1.5 rounded-full font-bold bg-white text-[#4B574F] border border-[#E8E1D5]">Postes de Soudage</button>
+        <button onclick="setCat('manos')" id="btn-manos" class="px-3 py-1.5 rounded-full font-bold bg-white text-[#4B574F] border border-[#E8E1D5]">Manodétendeurs</button>
+        <button onclick="setCat('epi')" id="btn-epi" class="px-3 py-1.5 rounded-full font-bold bg-white text-[#4B574F] border border-[#E8E1D5]">Protection EPI</button>
+      </div>
+    </div>
+
+    <!-- Results List -->
+    <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Generated via JS -->
+    </div>
+
+  </div>
+
+  <script>
+    const ITEMS = [
+      { id: 1, name: "Oxygène Industriel & Médical B50", cat: "gaz", price: 280, unit: "Bouteille 10.5m³", desc: "Pureté 99.5% pour oxycoupage et soudure." },
+      { id: 2, name: "Argon Pur 5.0 (Ar) B50", cat: "gaz", price: 450, unit: "Bouteille 10m³", desc: "Pureté 99.999% pour soudage TIG de l'inox et alu." },
+      { id: 3, name: "Mélange Argon + CO2 B50", cat: "gaz", price: 390, unit: "Bouteille 10.5m³", desc: "Mix synergique pour soudage semi-auto MIG/MAG." },
+      { id: 4, name: "Poste Inverter MMA 200A Pro LCD", cat: "postes", price: 2150, unit: "Pack Complet", desc: "Modèle vedette du flyer à technologie IGBT." },
+      { id: 5, name: "Poste Semi-Auto MIG/MAG 250A", cat: "postes", price: 5800, unit: "Poste + Torche", desc: "Dévidoir 4 galets motorisé pour bobine 15kg." },
+      { id: 6, name: "Poste TIG AC/DC 200A Pulsé HF", cat: "postes", price: 7400, unit: "Pack Complet", desc: "Amorçage HF sans contact pour aluminium et inox." },
+      { id: 7, name: "Manodétendeur Blindé Oxygène", cat: "manos", price: 480, unit: "Unité", desc: "Laiton matricé lourd antichoc norme ISO 2503." },
+      { id: 8, name: "Manodétendeur Débitmètre Argon/CO2", cat: "manos", price: 520, unit: "Unité", desc: "Débitmètre gradué 0-32 L/min pour économie de gaz." },
+      { id: 9, name: "Cagoule Soudage LCD True Color", cat: "epi", price: 690, unit: "Kit", desc: "Vision couleurs réelles, assombrissement 1/30000s." }
+    ];
+
+    let currentCat = 'all';
+
+    function setCat(c) {
+      currentCat = c;
+      ['all', 'gaz', 'postes', 'manos', 'epi'].forEach(id => {
+        const btn = document.getElementById('btn-' + id);
+        if (id === c) {
+          btn.className = "px-3 py-1.5 rounded-full font-bold bg-[#0D3823] text-white";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-full font-bold bg-white text-[#4B574F] border border-[#E8E1D5]";
+        }
+      });
+      filterItems();
+    }
+
+    function filterItems() {
+      const search = document.getElementById('search-input').value.toLowerCase();
+      const filtered = ITEMS.filter(it => {
+        const matchCat = currentCat === 'all' || it.cat === currentCat;
+        const matchSearch = !search || it.name.toLowerCase().includes(search) || it.desc.toLowerCase().includes(search);
+        return matchCat && matchSearch;
+      });
+
+      const container = document.getElementById('results-grid');
+      container.innerHTML = filtered.map(it => `
+        <div class="bg-white p-5 rounded-2xl border border-[#E8E1D5] shadow-xs flex flex-col justify-between space-y-3">
+          <div>
+            <span class="text-[10px] font-bold text-[#637067] bg-[#FAF7F2] px-2 py-0.5 rounded-full border border-[#E8E1D5]">${it.unit}</span>
+            <h4 class="font-bold text-sm text-[#141E18] mt-2">${it.name}</h4>
+            <p class="text-xs text-[#637067] mt-1">${it.desc}</p>
+          </div>
+          <div class="pt-3 border-t border-[#F0ECE3] flex items-center justify-between">
+            <span class="font-black text-sm text-[#0D3823]">${it.price.toLocaleString('fr-FR')} MAD</span>
+            <a href="https://wa.me/212661490495?text=Bonjour,%20je%20suis%20intéressé%20par%20${encodeURIComponent(it.name)}" target="_blank" class="px-3 py-1 rounded-full bg-[#0D3823] text-white font-bold text-xs hover:bg-[#072416]">Commander</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    filterItems();
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+  <!-- Modern Geometric Tenira Travaux TT Monogram -->
+  <rect width="160" height="160" rx="24" fill="#03260c"/>
+  
+  <!-- Outer T -->
+  <path d="M 28 36 H 132 V 56 H 92 V 126 H 68 V 56 H 28 Z" 
+        stroke="#22c55e" stroke-width="6" stroke-linejoin="miter" fill="#0b6623"/>
+  
+  <!-- Inner T interlocking -->
+  <path d="M 44 52 H 116 V 68 H 88 V 116 H 72 V 68 H 44 Z" 
+        fill="#ffffff" stroke="#15803d" stroke-width="4"/>
+
+  <!-- Technical accent notches -->
+  <rect x="24" y="32" width="12" height="12" fill="#22c55e" />
+  <rect x="124" y="32" width="12" height="12" fill="#22c55e" />
+  <rect x="64" y="122" width="32" height="6" fill="#22c55e" />
+</svg>

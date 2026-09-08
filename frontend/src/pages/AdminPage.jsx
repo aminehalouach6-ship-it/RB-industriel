@@ -1,0 +1,1194 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  Package, 
+  Plus, 
+  Trash2, 
+  Edit3,
+  RefreshCw, 
+  CheckCircle, 
+  ExternalLink,
+  MessageCircle,
+  Clock,
+  Send,
+  Phone,
+  Truck,
+  MapPin,
+  Search,
+  SlidersHorizontal,
+  X,
+  AlertCircle,
+  TrendingUp,
+  ShoppingBag,
+  FileText,
+  DollarSign,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  LogOut,
+  ShieldCheck
+} from 'lucide-react';
+import { 
+  fetchProducts, 
+  fetchCategories, 
+  fetchStats, 
+  fetchOrders, 
+  updateOrderStatus, 
+  deleteOrder, 
+  createProduct, 
+  updateProduct, 
+  deleteProduct,
+  fetchQuotes,
+  adminLogin
+} from '../services/api';
+import { Link } from 'react-router-dom';
+
+const PRESET_IMAGES = [
+  { label: 'Bouteille Oxygène B50', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80' },
+  { label: 'Poste Inverter MMA 200A', url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=600&auto=format&fit=crop&q=80' },
+  { label: 'Poste MIG/MAG 250A', url: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=600&auto=format&fit=crop&q=80' },
+  { label: 'Masque LCD Automatique', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80' },
+  { label: 'Manodétendeur Blindé', url: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?w=600&auto=format&fit=crop&q=80' },
+  { label: 'Bobine Fil SG2 15kg', url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=600&auto=format&fit=crop&q=80' },
+];
+
+const ORDER_STATUS_CONFIG = {
+  'EN_ATTENTE': { label: 'En attente', color: 'bg-amber-100 text-amber-800 border-amber-300' },
+  'EN_COURS': { label: 'En préparation / Expédition', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+  'LIVRE': { label: 'Livrée avec succès', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+  'ANNULE': { label: 'Annulée', color: 'bg-rose-100 text-rose-800 border-rose-300' },
+};
+
+export default function AdminPage() {
+  // Authentication State: Always require login upon accessing the admin
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminUser, setAdminUser] = useState('admin');
+
+  // Ensure any previous tokens are wiped so login is strictly required on every access
+  useEffect(() => {
+    localStorage.removeItem('tenira_admin_auth');
+    localStorage.removeItem('tenira_admin_user');
+    sessionStorage.removeItem('tenira_admin_auth');
+    sessionStorage.removeItem('tenira_admin_user');
+    setIsAuthenticated(false);
+  }, []);
+
+  // Login Form State
+  const [usernameInput, setUsernameInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  const [stats, setStats] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [quotes, setQuotes] = useState([]);
+  
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'products' | 'quotes'
+  const [loading, setLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  // Orders tracking filters
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('ALL');
+
+  // Product filters
+  const [productSearch, setProductSearch] = useState('');
+
+  // Modals
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  // Form State
+  const initialProductState = {
+    name: '',
+    slug: '',
+    category_id: 1,
+    short_desc: '',
+    description: '',
+    price_estimate: 0,
+    unit: 'Bouteille B50 (10.5 m³)',
+    in_stock: true,
+    badge: 'Nouveau',
+    gas_type: 'Oxygène',
+    cylinder_sizes: 'B20 (4.2 m³), B50 (10.5 m³)',
+    image_url: PRESET_IMAGES[0].url,
+    specifications: { "Pression": "200 bars", "Pureté": "≥ 99.5%" }
+  };
+
+  const [productForm, setProductForm] = useState(initialProductState);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+    setLoginLoading(true);
+    try {
+      const data = await adminLogin(usernameInput, passwordInput);
+      if (data.success) {
+        setAdminUser(data.username);
+        setIsAuthenticated(true);
+        showToast("Connexion réussie à l'Espace Administrateur !");
+      }
+    } catch (err) {
+      setLoginError(err.message || "Nom d'utilisateur ou mot de passe incorrect.");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('tenira_admin_auth');
+    localStorage.removeItem('tenira_admin_user');
+    sessionStorage.removeItem('tenira_admin_auth');
+    sessionStorage.removeItem('tenira_admin_user');
+    setIsAuthenticated(false);
+    setUsernameInput('');
+    setPasswordInput('');
+    showToast("Déconnexion réussie.");
+  };
+
+  const loadAll = async () => {
+    setLoading(true);
+    try {
+      const [s, p, c, o, q] = await Promise.all([
+        fetchStats(),
+        fetchProducts(),
+        fetchCategories(),
+        fetchOrders(),
+        fetchQuotes()
+      ]);
+      setStats(s);
+      setProducts(p);
+      setCategories(c);
+      setOrders(o);
+      setQuotes(q);
+    } catch (e) {
+      console.error("Error loading admin data:", e);
+      showToast("Erreur de connexion à l'API FastAPI/PostgreSQL");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadAll();
+    }
+  }, [isAuthenticated]);
+
+
+  // Filtered Orders
+  const filteredOrders = useMemo(() => {
+    return orders.filter((ord) => {
+      const matchStatus = orderStatusFilter === 'ALL' || ord.status === orderStatusFilter;
+      const q = orderSearch.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        ord.order_reference?.toLowerCase().includes(q) ||
+        ord.customer_name?.toLowerCase().includes(q) ||
+        ord.customer_phone?.toLowerCase().includes(q) ||
+        ord.delivery_city?.toLowerCase().includes(q);
+      return matchStatus && matchSearch;
+    });
+  }, [orders, orderStatusFilter, orderSearch]);
+
+  // Filtered Products
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const q = productSearch.toLowerCase().trim();
+      return !q || p.name.toLowerCase().includes(q) || (p.gas_type && p.gas_type.toLowerCase().includes(q));
+    });
+  }, [products, productSearch]);
+
+  // Total calculated revenue
+  const totalRevenue = useMemo(() => {
+    return orders.reduce((acc, ord) => acc + (ord.total_estimated || 0), 0);
+  }, [orders]);
+
+  // Handle Order Status Update (Live PostgreSQL PATCH)
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      showToast(`Statut de la commande mis à jour : ${newStatus}`);
+      // Update local state instantly
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la mise à jour du statut");
+    }
+  };
+
+  // Handle Delete Order (Live PostgreSQL DELETE)
+  const handleDeleteOrder = async (orderId, ref) => {
+    if (!window.confirm(`Supprimer définitivement la commande ${ref} de PostgreSQL ?`)) return;
+    try {
+      await deleteOrder(orderId);
+      showToast(`Commande ${ref} supprimée.`);
+      setOrders(prev => prev.filter(o => o.id !== orderId));
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la suppression");
+    }
+  };
+
+  // Handle Create Product (Live PostgreSQL POST)
+  const handleCreateProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const slugVal = productForm.slug || productForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const payload = {
+        ...productForm,
+        slug: slugVal,
+        category_id: parseInt(productForm.category_id, 10),
+        price_estimate: parseFloat(productForm.price_estimate) || 0
+      };
+
+      await createProduct(payload);
+      showToast('Nouveau produit inséré avec succès dans PostgreSQL !');
+      setShowAddModal(false);
+      setProductForm(initialProductState);
+      loadAll();
+    } catch (err) {
+      console.error(err);
+      alert(`Erreur création : ${err.message}`);
+    }
+  };
+
+  // Handle Edit Product (Live PostgreSQL PUT)
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    try {
+      const payload = {
+        ...editingProduct,
+        category_id: parseInt(editingProduct.category_id, 10),
+        price_estimate: parseFloat(editingProduct.price_estimate) || 0
+      };
+
+      await updateProduct(editingProduct.id, payload);
+      showToast(`Produit ${editingProduct.name} mis à jour dans PostgreSQL !`);
+      setEditingProduct(null);
+      loadAll();
+    } catch (err) {
+      console.error(err);
+      alert(`Erreur mise à jour : ${err.message}`);
+    }
+  };
+
+  // Handle Delete Product (Live PostgreSQL DELETE)
+  const handleDeleteProduct = async (id, name) => {
+    if (!window.confirm(`Voulez-vous supprimer définitivement "${name}" de la base PostgreSQL ?`)) return;
+    try {
+      await deleteProduct(id);
+      showToast(`Produit "${name}" supprimé.`);
+      setProducts(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la suppression");
+    }
+  };
+
+  // If not authenticated, show Login Screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 bg-[#FAF7F2]">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-[#E8E1D5] shadow-2xl p-8 space-y-6">
+          
+          {/* Brand & Security Header */}
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 bg-[#0D3823] text-white rounded-3xl mx-auto flex items-center justify-center shadow-md">
+              <Lock className="w-8 h-8 text-emerald-300" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#C3643B]">
+                TENIRA TRAVAUX • TIT MELLIL
+              </span>
+              <h2 className="text-2xl font-black text-[#141E18] tracking-tight mt-1">
+                Espace Administrateur
+              </h2>
+              <p className="text-xs text-[#637067] mt-1">
+                Accès sécurisé pour le pilotage des stocks et le suivi des commandes clients.
+              </p>
+            </div>
+          </div>
+
+          {/* Error alert */}
+          {loginError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2 text-xs text-red-700 font-medium animate-fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleLogin} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-bold text-[#141E18] mb-1.5">
+                Nom d'utilisateur
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 text-[#8C9890] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  required
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  placeholder="admin"
+                  className="w-full pl-10 pr-4 py-3 bg-[#FAF7F2] rounded-2xl border border-[#E8E1D5] text-xs font-semibold text-[#141E18] outline-none focus:border-[#0D3823] focus:ring-1 focus:ring-[#0D3823]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-[#141E18] mb-1.5">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-[#8C9890] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-10 py-3 bg-[#FAF7F2] rounded-2xl border border-[#E8E1D5] text-xs font-semibold text-[#141E18] outline-none focus:border-[#0D3823] focus:ring-1 focus:ring-[#0D3823]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8C9890] hover:text-[#141E18]"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="w-full py-3.5 px-4 rounded-full bg-[#0D3823] hover:bg-[#072416] text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+            >
+              {loginLoading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Connexion en cours...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                  <span>Se Connecter à l'Administration</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Demo Hint Card */}
+          <div className="p-3.5 bg-[#FAF7F2] rounded-2xl border border-[#E8E1D5] text-[11px] text-[#637067] space-y-1">
+            <div className="font-bold text-[#141E18] flex items-center gap-1.5">
+              <span>💡 Identifiants par défaut :</span>
+            </div>
+            <div className="flex justify-between font-mono pt-0.5">
+              <span>Utilisateur : <strong className="text-[#0D3823]">admin</strong></span>
+              <span>Mot de passe : <strong className="text-[#0D3823]">tenira2024</strong></span>
+            </div>
+          </div>
+
+          <div className="text-center pt-2">
+            <Link
+              to="/"
+              className="text-xs font-bold text-[#637067] hover:text-[#0D3823] hover:underline transition"
+            >
+              ← Retourner à la Boutique &amp; Catalogue
+            </Link>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#FAF7F2] min-h-screen text-[#141E18] py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        
+        {/* Toast Alert */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-50 bg-[#0D3823] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold animate-fade-in border border-emerald-400">
+            <CheckCircle className="w-4 h-4 text-emerald-300" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
+        {/* 1. Header & Live Sync Status */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#E8E1D5]">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[10px] uppercase font-black tracking-wider text-[#0D3823]">
+                PostgreSQL (port 5433) • FastAPI Live Sync
+              </span>
+            </div>
+            <h1 className="text-3xl font-serif font-bold text-[#141E18] tracking-tight mt-1">
+              Admin Studio <span className="italic font-normal text-[#C3643B]">• Tenira Travaux</span>
+            </h1>
+            <p className="text-xs text-[#637067]">
+              Pilotage direct des commandes, suivi logistique Tit Mellil &amp; gestion dynamique du catalogue.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/"
+              className="px-4 py-2 rounded-full border border-[#E8E1D5] bg-white text-xs font-bold text-[#141E18] hover:bg-[#FAF7F2] transition shadow-xs"
+            >
+              ← Retour au Catalogue
+            </Link>
+
+            <button
+              onClick={loadAll}
+              disabled={loading}
+              className="px-4 py-2 rounded-full border border-[#E8E1D5] bg-white text-xs font-bold text-[#4B574F] hover:bg-[#FAF7F2] flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span>Actualiser</span>
+            </button>
+
+            {/* Logged in admin badge */}
+            <div className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-[#E8E1D5] text-xs font-bold text-[#0D3823]">
+              <User className="w-3.5 h-3.5" />
+              <span>{adminUser}</span>
+            </div>
+
+            {/* Logout button */}
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+              title="Se déconnecter de l'administration"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Déconnexion</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 2. Real-Time KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-5 rounded-3xl border border-[#E8E1D5] shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-[#637067]">
+              <span className="text-[10px] font-bold uppercase tracking-wider">Commandes Enregistrées</span>
+              <ShoppingBag className="w-4 h-4 text-[#0D3823]" />
+            </div>
+            <span className="text-3xl font-black text-[#141E18] block">{orders.length}</span>
+            <span className="text-[11px] text-emerald-700 font-semibold">PostgreSQL Synchronisé</span>
+          </div>
+
+          <div className="bg-white p-5 rounded-3xl border border-[#E8E1D5] shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-[#637067]">
+              <span className="text-[10px] font-bold uppercase tracking-wider">Chiffre d'Affaires Estimé</span>
+              <DollarSign className="w-4 h-4 text-[#C3643B]" />
+            </div>
+            <span className="text-3xl font-black text-[#0D3823] block">
+              {totalRevenue.toLocaleString('fr-FR')} <span className="text-xs font-bold">MAD</span>
+            </span>
+            <span className="text-[11px] text-[#637067]">Cumul commandes web &amp; COD</span>
+          </div>
+
+          <div className="bg-white p-5 rounded-3xl border border-[#E8E1D5] shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-[#637067]">
+              <span className="text-[10px] font-bold uppercase tracking-wider">Produits Actifs</span>
+              <Package className="w-4 h-4 text-[#0D3823]" />
+            </div>
+            <span className="text-3xl font-black text-[#141E18] block">{products.length}</span>
+            <span className="text-[11px] text-[#637067]">Gaz, Postes, Torches, EPI</span>
+          </div>
+
+          <div className="bg-white p-5 rounded-3xl border border-[#E8E1D5] shadow-xs space-y-1">
+            <div className="flex items-center justify-between text-[#637067]">
+              <span className="text-[10px] font-bold uppercase tracking-wider">À Préparer / Livrer</span>
+              <Truck className="w-4 h-4 text-amber-600" />
+            </div>
+            <span className="text-3xl font-black text-amber-700 block">
+              {orders.filter(o => o.status === 'EN_ATTENTE' || o.status === 'EN_COURS').length}
+            </span>
+            <span className="text-[11px] text-amber-800 font-semibold">Chantiers Grand Casablanca</span>
+          </div>
+        </div>
+
+        {/* 3. Navigation Tabs */}
+        <div className="flex items-center gap-2 border-b border-[#E8E1D5] pb-2 text-xs font-bold">
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'orders' 
+                ? 'bg-[#0D3823] text-white shadow-xs' 
+                : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
+            }`}
+          >
+            <Truck className="w-3.5 h-3.5" />
+            <span>Suivi &amp; Tracking des Commandes ({orders.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('products')}
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'products' 
+                ? 'bg-[#0D3823] text-white shadow-xs' 
+                : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
+            }`}
+          >
+            <Package className="w-3.5 h-3.5" />
+            <span>Gestion des Produits &amp; Gaz ({products.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('quotes')}
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'quotes' 
+                ? 'bg-[#0D3823] text-white shadow-xs' 
+                : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Devis Express ({quotes.length})</span>
+          </button>
+        </div>
+
+        {/* 4. TAB CONTENT: ORDERS TRACKING */}
+        {activeTab === 'orders' && (
+          <div className="space-y-4">
+            
+            {/* Toolbar Filters for Orders */}
+            <div className="bg-white p-4 rounded-3xl border border-[#E8E1D5] flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
+              {/* Search */}
+              <div className="relative w-full md:w-80">
+                <Search className="w-4 h-4 text-[#8C9890] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  placeholder="Rechercher réf, client, téléphone, ville..."
+                  className="w-full pl-9 pr-3 py-2 text-xs bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                />
+              </div>
+
+              {/* Status Filter Buttons */}
+              <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto text-[11px] font-bold">
+                {[
+                  { label: 'Toutes', val: 'ALL' },
+                  { label: '⏳ En attente', val: 'EN_ATTENTE' },
+                  { label: '🚚 En cours', val: 'EN_COURS' },
+                  { label: '✅ Livrées', val: 'LIVRE' },
+                  { label: '❌ Annulées', val: 'ANNULE' },
+                ].map(tab => (
+                  <button
+                    key={tab.val}
+                    onClick={() => setOrderStatusFilter(tab.val)}
+                    className={`px-3 py-1.5 rounded-full transition cursor-pointer whitespace-nowrap ${
+                      orderStatusFilter === tab.val
+                        ? 'bg-[#141E18] text-white'
+                        : 'bg-[#FAF7F2] text-[#637067] hover:bg-[#E8E1D5]'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Orders List */}
+            {filteredOrders.length === 0 ? (
+              <div className="bg-white p-12 text-center rounded-3xl border border-[#E8E1D5] space-y-2">
+                <Truck className="w-10 h-10 text-[#8C9890] mx-auto" />
+                <h3 className="font-bold text-sm text-[#141E18]">Aucune commande trouvée</h3>
+                <p className="text-xs text-[#637067]">
+                  {orderSearch || orderStatusFilter !== 'ALL' 
+                    ? "Aucun résultat ne correspond à vos critères de recherche." 
+                    : "Passez une commande test depuis le catalogue pour la voir s'afficher en direct !"}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredOrders.map(order => {
+                  const statusConf = ORDER_STATUS_CONFIG[order.status] || { label: order.status, color: 'bg-slate-100 text-slate-800' };
+                  const formattedDate = order.created_at ? new Date(order.created_at).toLocaleString('fr-FR') : 'Récent';
+
+                  // Pre-filled WhatsApp message for customer
+                  const waCustomerMsg = `Bonjour ${order.customer_name},\n` +
+                    `Concernant votre commande ${order.order_reference} d'un montant de ${order.total_estimated} MAD chez TENIRA TRAVAUX (Tit Mellil):\n` +
+                    `Statut actuel : ${statusConf.label}.\n` +
+                    `Notre équipe logistique reste à votre disposition.`;
+
+                  const waUrl = `https://wa.me/${(order.customer_phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(waCustomerMsg)}`;
+
+                  return (
+                    <div 
+                      key={order.id} 
+                      className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-xs hover:border-[#0D3823]/40 transition space-y-4"
+                    >
+                      {/* Top Order Row */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#F0ECE3]">
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-black text-sm text-[#0D3823] bg-[#FAF7F2] px-3 py-1 rounded-full border border-[#E8E1D5]">
+                            {order.order_reference}
+                          </span>
+                          <span className="text-xs text-[#8C9890] flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {formattedDate}
+                          </span>
+                        </div>
+
+                        {/* Interactive Status Changer */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] uppercase font-bold text-[#8C9890]">Statut :</span>
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
+                            className={`text-xs font-black px-3 py-1.5 rounded-full border cursor-pointer outline-none ${statusConf.color}`}
+                          >
+                            <option value="EN_ATTENTE">⏳ En Attente</option>
+                            <option value="EN_COURS">🚚 En Préparation / Expédition</option>
+                            <option value="LIVRE">✅ Livrée avec Succès</option>
+                            <option value="ANNULE">❌ Annulée</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Middle: Client Info & Logistics */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                        {/* Client details */}
+                        <div className="space-y-1 bg-[#FAF7F2] p-4 rounded-2xl border border-[#E8E1D5]/70">
+                          <span className="text-[10px] font-bold uppercase text-[#8C9890] block">Client &amp; Contact</span>
+                          <p className="font-bold text-[#141E18] text-sm">{order.customer_name}</p>
+                          {order.company_name && <p className="text-[#637067]">Société : {order.company_name}</p>}
+                          <div className="flex items-center gap-3 pt-1">
+                            <a 
+                              href={`tel:${order.customer_phone}`}
+                              className="font-mono text-[#0D3823] font-bold hover:underline flex items-center gap-1"
+                            >
+                              <Phone className="w-3 h-3" />
+                              {order.customer_phone}
+                            </a>
+                            <a
+                              href={waUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-2.5 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center gap-1"
+                            >
+                              <MessageCircle className="w-3 h-3" />
+                              WhatsApp
+                            </a>
+                          </div>
+                        </div>
+
+                        {/* Delivery details */}
+                        <div className="space-y-1 bg-[#FAF7F2] p-4 rounded-2xl border border-[#E8E1D5]/70">
+                          <span className="text-[10px] font-bold uppercase text-[#8C9890] block">Livraison &amp; Adresse</span>
+                          <p className="font-bold text-[#141E18]">
+                            {order.delivery_mode === 'RETRAIT' ? '🏢 Retrait Dépôt Tit Mellil' : '🚚 Livraison Chantier / Site'}
+                          </p>
+                          <p className="text-[#637067]">Ville : <strong>{order.delivery_city}</strong></p>
+                          {order.delivery_address && (
+                            <p className="text-[#637067] line-clamp-1">Adresse : {order.delivery_address}</p>
+                          )}
+                        </div>
+
+                        {/* Total & Action */}
+                        <div className="space-y-1 bg-[#FAF7F2] p-4 rounded-2xl border border-[#E8E1D5]/70 flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase text-[#8C9890] block">Montant Estimé</span>
+                            <span className="text-xl font-black text-[#141E18]">
+                              {order.total_estimated?.toLocaleString('fr-FR')} <span className="text-xs text-[#0D3823]">MAD</span>
+                            </span>
+                            <span className="text-[10px] text-[#637067] block">Paiement à la livraison (COD)</span>
+                          </div>
+
+                          <div className="pt-2 flex justify-end">
+                            <button
+                              onClick={() => handleDeleteOrder(order.id, order.order_reference)}
+                              className="text-slate-400 hover:text-red-600 text-[11px] font-bold flex items-center gap-1 transition"
+                              title="Supprimer la commande"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Supprimer</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Items table */}
+                      {order.items && order.items.length > 0 && (
+                        <div className="bg-white rounded-2xl border border-[#F0ECE3] overflow-hidden">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-[#FAF7F2] text-[10px] uppercase font-bold text-[#8C9890]">
+                              <tr>
+                                <th className="p-2.5">Article Commandé</th>
+                                <th className="p-2.5 text-center">Quantité</th>
+                                <th className="p-2.5 text-right">Prix Unitaire</th>
+                                <th className="p-2.5 text-right">Total Ligne</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#F0ECE3]">
+                              {order.items.map((it, idx) => (
+                                <tr key={idx}>
+                                  <td className="p-2.5 font-semibold text-[#141E18]">{it.product_name}</td>
+                                  <td className="p-2.5 text-center font-bold">{it.quantity}</td>
+                                  <td className="p-2.5 text-right text-[#637067]">{it.unit_price} MAD</td>
+                                  <td className="p-2.5 text-right font-black text-[#0D3823]">
+                                    {(it.quantity * it.unit_price).toLocaleString('fr-FR')} MAD
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* 5. TAB CONTENT: PRODUCTS CRUD MANAGEMENT */}
+        {activeTab === 'products' && (
+          <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-xs space-y-6">
+            
+            {/* Header Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F0ECE3]">
+              <div>
+                <h2 className="text-lg font-black text-[#141E18]">Gestion du Catalogue en Base PostgreSQL</h2>
+                <p className="text-xs text-[#637067]">
+                  Ajoutez, modifiez ou supprimez des références de gaz et matériels de soudage.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-[#8C9890] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    placeholder="Filtrer les produits..."
+                    className="pl-9 pr-3 py-2 text-xs bg-[#FAF7F2] rounded-full border border-[#E8E1D5] outline-none"
+                  />
+                </div>
+
+                <button
+                  onClick={() => {
+                    setProductForm(initialProductState);
+                    setShowAddModal(true);
+                  }}
+                  className="px-5 py-2.5 rounded-full bg-[#0D3823] hover:bg-[#072416] text-white text-xs font-bold flex items-center gap-2 shadow-xs transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Nouveau Produit</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Products Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="text-[10px] uppercase font-bold text-[#8C9890] border-b border-[#F0ECE3]">
+                    <th className="pb-3">Produit</th>
+                    <th className="pb-3">Catégorie</th>
+                    <th className="pb-3">Format / Unité</th>
+                    <th className="pb-3">Prix (MAD)</th>
+                    <th className="pb-3">Disponibilité</th>
+                    <th className="pb-3">Badge</th>
+                    <th className="pb-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F0ECE3]">
+                  {filteredProducts.map((p) => {
+                    const catName = p.category?.name || categories.find(c => c.id === p.category_id)?.name || 'Général';
+                    return (
+                      <tr key={p.id} className="hover:bg-[#FAF7F2]/50 transition">
+                        <td className="py-3 pr-2">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={p.image_url || PRESET_IMAGES[0].url}
+                              alt={p.name}
+                              className="w-10 h-10 object-cover rounded-xl border border-[#E8E1D5]"
+                            />
+                            <div>
+                              <span className="font-bold text-[#141E18] block">{p.name}</span>
+                              {p.gas_type && (
+                                <span className="text-[10px] text-[#0D3823] font-mono">Gaz : {p.gas_type}</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="py-3 text-[#637067] font-semibold">{catName}</td>
+                        <td className="py-3 font-mono text-[#4B574F]">{p.unit}</td>
+                        <td className="py-3 font-black text-[#0D3823]">
+                          {p.price_estimate > 0 ? `${p.price_estimate.toLocaleString('fr-FR')} MAD` : 'Sur Devis'}
+                        </td>
+                        <td className="py-3">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            p.in_stock ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {p.in_stock ? 'En stock' : 'Rupture'}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          {p.badge && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#FCF3EE] text-[#C3643B] border border-[#F2D7CB]">
+                              {p.badge}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setEditingProduct(p)}
+                              className="p-1.5 text-slate-500 hover:text-[#0D3823] hover:bg-[#E8E1D5] rounded-lg transition"
+                              title="Modifier"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteProduct(p.id, p.name)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                              title="Supprimer de PostgreSQL"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        )}
+
+        {/* 6. TAB CONTENT: QUOTES */}
+        {activeTab === 'quotes' && (
+          <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-xs space-y-4">
+            <h2 className="text-base font-bold text-[#141E18]">Demandes de Devis Express Reçues</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="text-[10px] uppercase font-bold text-[#8C9890] border-b border-[#F0ECE3]">
+                    <th className="pb-2">Réf Devis</th>
+                    <th className="pb-2">Client</th>
+                    <th className="pb-2">Téléphone</th>
+                    <th className="pb-2">Ville</th>
+                    <th className="pb-2">Total Estimé</th>
+                    <th className="pb-2 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F0ECE3]">
+                  {quotes.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" className="py-6 text-center text-[#8C9890]">
+                        Aucune demande de devis enregistrée pour l'instant.
+                      </td>
+                    </tr>
+                  ) : (
+                    quotes.map(q => (
+                      <tr key={q.id}>
+                        <td className="py-3 font-mono font-bold text-[#C3643B]">{q.quote_reference}</td>
+                        <td className="py-3 font-semibold">{q.client_name}</td>
+                        <td className="py-3 font-mono">{q.phone}</td>
+                        <td className="py-3">{q.city}</td>
+                        <td className="py-3 font-bold">{q.estimated_total?.toLocaleString('fr-FR')} MAD</td>
+                        <td className="py-3 text-right">
+                          <a
+                            href={`https://wa.me/${(q.phone || '').replace(/[^0-9]/g, '')}?text=Bonjour%20${encodeURIComponent(q.client_name)},%20concernant%20votre%20devis%20${q.quote_reference}%20chez%20TENIRA%20TRAVAUX.`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3 py-1 rounded-full bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 inline-flex items-center gap-1"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            WhatsApp
+                          </a>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* MODAL: AJOUTER UN PRODUIT DANS POSTGRESQL */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full border border-[#E8E1D5] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E8E1D5]">
+              <h3 className="font-black text-base text-[#141E18]">Ajouter un Produit dans PostgreSQL</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-[#8C9890] hover:text-[#141E18]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateProduct} className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold block mb-1">Nom du Produit *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex: Gaz Argon Pur 5.0 B50"
+                  value={productForm.name}
+                  onChange={e => {
+                    const slug = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                    setProductForm({ ...productForm, name: e.target.value, slug });
+                  }}
+                  className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none focus:border-[#0D3823]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-bold block mb-1">Catégorie *</label>
+                  <select
+                    value={productForm.category_id}
+                    onChange={e => setProductForm({ ...productForm, category_id: e.target.value })}
+                    className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                  >
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold block mb-1">Prix Estimatif (MAD)</label>
+                  <input
+                    type="number"
+                    value={productForm.price_estimate}
+                    onChange={e => setProductForm({ ...productForm, price_estimate: e.target.value })}
+                    className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-bold block mb-1">Unité / Contenance</label>
+                  <input
+                    type="text"
+                    placeholder="Bouteille B50 (10.5 m³)"
+                    value={productForm.unit}
+                    onChange={e => setProductForm({ ...productForm, unit: e.target.value })}
+                    className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold block mb-1">Type de Gaz (si applicable)</label>
+                  <select
+                    value={productForm.gas_type}
+                    onChange={e => setProductForm({ ...productForm, gas_type: e.target.value })}
+                    className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                  >
+                    <option value="Oxygène">Oxygène (O2)</option>
+                    <option value="Argon">Argon (Ar)</option>
+                    <option value="CO2">CO2</option>
+                    <option value="Azote">Azote (N2)</option>
+                    <option value="Mélange Ar/CO2">Mélange Ar/CO2</option>
+                    <option value="Acétylène">Acétylène</option>
+                    <option value="">Autre / N/A</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Preset Image Chooser */}
+              <div>
+                <label className="font-bold block mb-1">Sélection Rapide d'Image Préconfigurée</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {PRESET_IMAGES.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, image_url: img.url })}
+                      className={`p-1.5 rounded-xl border text-[10px] font-bold text-center truncate transition cursor-pointer ${
+                        productForm.image_url === img.url 
+                          ? 'bg-[#0D3823] text-white border-[#0D3823]' 
+                          : 'bg-[#FAF7F2] border-[#E8E1D5] text-[#4B574F] hover:bg-white'
+                      }`}
+                    >
+                      {img.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold block mb-1">URL Image Personnalisée</label>
+                <input
+                  type="text"
+                  value={productForm.image_url}
+                  onChange={e => setProductForm({ ...productForm, image_url: e.target.value })}
+                  className="w-full p-2 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none font-mono text-[10px]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-bold block mb-1">Badge (optionnel)</label>
+                  <input
+                    type="text"
+                    placeholder="Top Vente, 200 Bar..."
+                    value={productForm.badge}
+                    onChange={e => setProductForm({ ...productForm, badge: e.target.value })}
+                    className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center pt-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={productForm.in_stock}
+                      onChange={e => setProductForm({ ...productForm, in_stock: e.target.checked })}
+                      className="rounded text-[#0D3823]"
+                    />
+                    <span className="font-bold">Disponible en stock</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold block mb-1">Description Courte</label>
+                <textarea
+                  rows="2"
+                  value={productForm.short_desc}
+                  onChange={e => setProductForm({ ...productForm, short_desc: e.target.value })}
+                  className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                ></textarea>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-[#E8E1D5]">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-[#637067] font-bold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-full bg-[#0D3823] hover:bg-[#072416] text-white font-bold shadow-xs cursor-pointer"
+                >
+                  Enregistrer dans PostgreSQL
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: MODIFIER UN PRODUIT */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full border border-[#E8E1D5] shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E8E1D5]">
+              <h3 className="font-black text-base text-[#141E18]">Modifier le Produit #{editingProduct.id}</h3>
+              <button onClick={() => setEditingProduct(null)} className="text-[#8C9890] hover:text-[#141E18]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateProduct} className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold block mb-1">Nom du Produit</label>
+                <input
+                  type="text"
+                  required
+                  value={editingProduct.name}
+                  onChange={e => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                  className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-bold block mb-1">Prix Estimatif (MAD)</label>
+                  <input
+                    type="number"
+                    value={editingProduct.price_estimate}
+                    onChange={e => setEditingProduct({ ...editingProduct, price_estimate: e.target.value })}
+                    className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold block mb-1">Unité</label>
+                  <input
+                    type="text"
+                    value={editingProduct.unit}
+                    onChange={e => setEditingProduct({ ...editingProduct, unit: e.target.value })}
+                    className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 py-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingProduct.in_stock}
+                    onChange={e => setEditingProduct({ ...editingProduct, in_stock: e.target.checked })}
+                    className="rounded text-[#0D3823]"
+                  />
+                  <span className="font-bold">En Stock (Tit Mellil)</span>
+                </label>
+              </div>
+
+              <div>
+                <label className="font-bold block mb-1">Description</label>
+                <textarea
+                  rows="3"
+                  value={editingProduct.short_desc || editingProduct.description || ''}
+                  onChange={e => setEditingProduct({ ...editingProduct, short_desc: e.target.value })}
+                  className="w-full p-2.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-xl outline-none"
+                ></textarea>
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-[#E8E1D5]">
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="px-4 py-2 text-[#637067] font-bold"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-full bg-[#0D3823] hover:bg-[#072416] text-white font-bold shadow-xs cursor-pointer"
+                >
+                  Mettre à Jour dans PostgreSQL
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

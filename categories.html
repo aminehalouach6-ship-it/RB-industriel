@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catégories & Rayons • TENIRA TRAVAUX</title>
+  <meta name="description" content="Découvrez nos 6 catégories de gaz industriels et matériel de soudage à Tit Mellil et Casablanca.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS & Lucide Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+  </style>
+</head>
+<body class="h-full antialiased bg-[#FAF7F2] text-[#141E18]">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-[#E8E1D5] sticky top-0 z-30 px-6 py-4 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-[#0D3823] text-white flex items-center justify-center font-serif font-bold text-sm">
+        T
+      </div>
+      <div>
+        <span class="text-base font-extrabold text-[#141E18]">Tenira<span class="text-[#0D3823]">Travaux</span></span>
+        <span class="text-[10px] text-[#637067] block">Tit Mellil • Casablanca</span>
+      </div>
+    </a>
+
+    <div class="flex items-center gap-4 text-xs font-semibold">
+      <a href="index.html" class="text-[#4B574F] hover:text-[#0D3823]">Accueil</a>
+      <a href="catalog-filter.html" class="text-[#4B574F] hover:text-[#0D3823]">Filtres</a>
+      <a href="admin.html" class="text-[#4B574F] hover:text-[#0D3823]">Admin Studio</a>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    
+    <div class="space-y-2">
+      <span class="text-[11px] font-bold text-[#C3643B] uppercase tracking-widest block">CATALOGUE OFFICIEL</span>
+      <h1 class="text-3xl sm:text-4xl font-black text-[#141E18]">
+        Tous les Rayons &amp; Catégories
+      </h1>
+      <p class="text-xs sm:text-sm text-[#637067] max-w-xl">
+        Sélectionnez une catégorie pour consulter la disponibilité et commander directement.
+      </p>
+    </div>
+
+    <!-- Category Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- 1. Gaz -->
+      <div class="bg-white rounded-2xl p-6 border border-[#E8E1D5] shadow-xs space-y-3">
+        <span class="text-2xl">🔥</span>
+        <h3 class="text-lg font-bold text-[#141E18]">Gaz Industriels & Médicaux</h3>
+        <p class="text-xs text-[#637067]">Oxygène, Argon pur 5.0, Azote haute pureté, CO2 et mélanges de soudage sous 200 bars.</p>
+        <div class="pt-2 flex justify-between items-center text-xs">
+          <span class="font-bold text-[#0D3823]">6 Références</span>
+          <a href="catalog-filter.html?cat=gaz-industriels" class="text-[#C3643B] font-bold hover:underline">Explorer →</a>
+        </div>
+      </div>
+
+      <!-- 2. Postes -->
+      <div class="bg-white rounded-2xl p-6 border border-[#E8E1D5] shadow-xs space-y-3">
+        <span class="text-2xl">⚡</span>
+        <h3 class="text-lg font-bold text-[#141E18]">Postes de Soudage Pro</h3>
+        <p class="text-xs text-[#637067]">Inverter MMA LCD 200A, semi-automatiques MIG/MAG et TIG AC/DC à amorçage HF.</p>
+        <div class="pt-2 flex justify-between items-center text-xs">
+          <span class="font-bold text-[#0D3823]">3 Modèles Phares</span>
+          <a href="poste-inverter-mma.html" class="text-[#C3643B] font-bold hover:underline">Voir l'Inverter →</a>
+        </div>
+      </div>
+
+      <!-- 3. Manodétendeurs -->
+      <div class="bg-white rounded-2xl p-6 border border-[#E8E1D5] shadow-xs space-y-3">
+        <span class="text-2xl">🎛️</span>
+        <h3 class="text-lg font-bold text-[#141E18]">Manodétendeurs & Régulation</h3>
+        <p class="text-xs text-[#637067]">Corps en laiton matricé lourd, manomètres blindés antichoc, débitmètres gradués 0-32 L/min.</p>
+        <div class="pt-2 flex justify-between items-center text-xs">
+          <span class="font-bold text-[#0D3823]">Norme ISO 2503</span>
+          <a href="catalog-filter.html?cat=manodetendeurs" class="text-[#C3643B] font-bold hover:underline">Explorer →</a>
+        </div>
+      </div>
+
+      <!-- 4. Torches -->
+      <div class="bg-white rounded-2xl p-6 border border-[#E8E1D5] shadow-xs space-y-3">
+        <span class="text-2xl">🔧</span>
+        <h3 class="text-lg font-bold text-[#141E18]">Torches & Câbles</h3>
+        <p class="text-xs text-[#637067]">Torches MIG connecteur Euro, torches TIG WP-26, pinces de masse et porte-électrode en cuivre pur.</p>
+        <div class="pt-2 flex justify-between items-center text-xs">
+          <span class="font-bold text-[#0D3823]">Câbles Cuivre Pur</span>
+          <a href="catalog-filter.html" class="text-[#C3643B] font-bold hover:underline">Explorer →</a>
+        </div>
+      </div>
+
+      <!-- 5. Consommables -->
+      <div class="bg-white rounded-2xl p-6 border border-[#E8E1D5] shadow-xs space-y-3">
+        <span class="text-2xl">💿</span>
+        <h3 class="text-lg font-bold text-[#141E18]">Consommables & Fils</h3>
+        <p class="text-xs text-[#637067]">Bobines de fil cuivré SG2 15kg spire par spire, fil Inox 308L, électrodes rutiles E6013.</p>
+        <div class="pt-2 flex justify-between items-center text-xs">
+          <span class="font-bold text-[#0D3823]">Haute Qualité</span>
+          <a href="catalog-filter.html" class="text-[#C3643B] font-bold hover:underline">Explorer →</a>
+        </div>
+      </div>
+
+      <!-- 6. EPI -->
+      <div class="bg-white rounded-2xl p-6 border border-[#E8E1D5] shadow-xs space-y-3">
+        <span class="text-2xl">🦺</span>
+        <h3 class="text-lg font-bold text-[#141E18]">Protection & Sécurité EPI</h3>
+        <p class="text-xs text-[#637067]">Cagoules automatiques True Color (1/30000s), tabliers cuir fendu et gants thermiques Kevlar.</p>
+        <div class="pt-2 flex justify-between items-center text-xs">
+          <span class="font-bold text-[#0D3823]">Conforme EN 379</span>
+          <a href="masque-soudage-lcd.html" class="text-[#C3643B] font-bold hover:underline">Voir la Cagoule →</a>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</body>
+</html>
