@@ -1,5 +1,6 @@
-// API client for TENIRA TRAVAUX (connected to Docker FastAPI & PostgreSQL)
-const API_BASE_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:8000/api');
+// API client for RB INDUSTRIEL (connected to FastAPI & PostgreSQL)
+const rawApiUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:8000/api');
+const API_BASE_URL = rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/+$/, '')}/api`;
 
 // Fallback initial data in case the backend server is starting up or disconnected
 export const FALLBACK_CATEGORIES = [
