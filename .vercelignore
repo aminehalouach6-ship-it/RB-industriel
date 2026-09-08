@@ -1,0 +1,15 @@
+﻿node_modules
+*/node_modules
+dist
+*/dist
+__pycache__
+*/__pycache__
+*.pyc
+.env
+.DS_Store
+*.log
+tenira_local.db
+.vercel
+docker-compose.yml
+Dockerfile
+*/Dockerfile

@@ -8,10 +8,11 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
-    # Database URL
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", 
-        "postgresql://tenira_user:tenira_password@localhost:5432/tenira_db"
+    # Database URL (supports Vercel Postgres, Neon, Render, Supabase and local)
+    DATABASE_URL: str = (
+        os.getenv("POSTGRES_URL") 
+        or os.getenv("POSTGRES_PRISMA_URL") 
+        or os.getenv("DATABASE_URL", "postgresql://tenira_user:tenira_password@localhost:5432/tenira_db")
     )
     
     # CORS Origins

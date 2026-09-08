@@ -1,4 +1,6 @@
+import os
 import logging
+import tempfile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.config import settings
@@ -16,8 +18,10 @@ try:
     with engine.connect() as conn:
         logger.info("Successfully connected to primary database.")
 except Exception as e:
-    logger.warning(f"Could not connect to {db_url}: {e}. Falling back to sqlite:///./tenira_local.db for resilience.")
-    engine = create_engine("sqlite:///./tenira_local.db", connect_args={"check_same_thread": False})
+    tmp_dir = "/tmp" if os.path.exists("/tmp") else tempfile.gettempdir()
+    fallback_db = os.path.join(tmp_dir, "tenira_local.db").replace("\\", "/")
+    logger.warning(f"Could not connect to {db_url}: {e}. Falling back to sqlite:///{fallback_db} for resilience.")
+    engine = create_engine(f"sqlite:///{fallback_db}", connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

@@ -42,7 +42,11 @@ app.add_middleware(
 # Uploads directory static serving
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+except OSError:
+    UPLOAD_DIR = os.path.join("/tmp", "uploads")
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # Register API Routers
@@ -64,13 +68,51 @@ def health_check():
         "environment": settings.ENVIRONMENT
     }
 
-@app.get("/", tags=["Système"])
-def root():
+from fastapi.responses import FileResponse
+
+# Find Vite dist folder dynamically
+DIST_DIR = None
+search_paths = [
+    os.path.abspath("dist"),
+    os.path.abspath("frontend/dist"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "dist"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dist"),
+]
+for p in search_paths:
+    if os.path.isdir(p) and os.path.isfile(os.path.join(p, "index.html")):
+        DIST_DIR = p
+        break
+
+if DIST_DIR:
+    assets_dir = os.path.join(DIST_DIR, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+@app.get("/api/info", tags=["Système"])
+def system_info():
     return {
         "company": "RB INDUSTRIEL",
         "manager": "Rachid BOUZAYD",
         "activity": "Gaz Industriels & Matériel de Soudage",
         "address": "Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca - Maroc",
-        "phones": ["06 61 49 04 95", "07 00 95 00 64", "06 90 90 74 88", "06 95 95 86 27", "05 22 35 48 68"]
+        "phones": ["06 61 49 04 95", "07 00 95 00 64", "06 90 90 74 88", "06 95 95 86 27", "05 22 35 48 68"],
+        "frontend_dist": DIST_DIR
     }
+
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa_frontend(full_path: str):
+    if DIST_DIR:
+        if full_path:
+            candidate_file = os.path.join(DIST_DIR, full_path)
+            if os.path.isfile(candidate_file):
+                return FileResponse(candidate_file)
+        index_file = os.path.join(DIST_DIR, "index.html")
+        if os.path.isfile(index_file):
+            return FileResponse(index_file)
+    return {
+        "company": "RB INDUSTRIEL",
+        "service": "RB INDUSTRIEL Backend API",
+        "status": "online"
+    }
+
 

@@ -10,3 +10,5 @@ __pycache__/
 *.log
 tenira_local.db
 .vercel/
+
+.vercel
