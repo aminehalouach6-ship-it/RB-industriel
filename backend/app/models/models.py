@@ -98,3 +98,32 @@ class ContactMessage(Base):
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class CompanySettings(Base):
+    __tablename__ = "company_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_name = Column(String(150), default="RB INDUSTRIEL", nullable=False)
+    legal_name = Column(String(150), default="RB INDUSTRIEL S.A.R.L", nullable=False)
+    manager_name = Column(String(150), default="Rachid BOUZAYD", nullable=False)
+    tagline = Column(String(250), default="Gaz Industriels & Matériel de Soudage • Tit Mellil")
+    logo_url = Column(String(500), default="/logo_rb_industriale.png")
+    flyer_url = Column(String(500), default="/carte_officielle_tenira.png")
+    flyer_4k_url = Column(String(500), default="/carte_officielle_tenira_4k.png")
+    phone_main = Column(String(50), default="07 00 95 00 64")
+    phone_fixed = Column(String(50), default="05 22 35 48 68")
+    whatsapp_phone = Column(String(50), default="212700950064")
+    email = Column(String(150), default="")
+    address = Column(String(250), default="Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca - Maroc")
+    city = Column(String(100), default="Tit Mellil, Casablanca")
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+

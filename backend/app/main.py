@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.database import Base, engine, SessionLocal
 from app.seed_data import seed_database
-from app.api import products, orders, quotes, contact, stats, auth, upload
+from app.api import products, orders, quotes, contact, stats, auth, upload, company
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="API officielle TENIRA TRAVAUX - Vente, Distribution et Livraison de Gaz Industriels & Matériel de Soudage à Tit Mellil, Casablanca et partout au Maroc.",
+    description="API officielle RB INDUSTRIEL - Vente, Distribution et Livraison de Gaz Industriels & Matériel de Soudage à Tit Mellil, Casablanca et partout au Maroc.",
     lifespan=lifespan,
     docs_url=None,
     redoc_url=None,
@@ -53,12 +53,13 @@ app.include_router(quotes.router, prefix="/api/quotes", tags=["Devis"])
 app.include_router(contact.router, prefix="/api/contact", tags=["Contact & Assistance"])
 app.include_router(stats.router, prefix="/api/stats", tags=["Tableau de bord & Statistiques"])
 app.include_router(upload.router, prefix="/api/upload", tags=["Upload Images"])
+app.include_router(company.router, prefix="/api/company", tags=["Paramètres Entreprise"])
 
 @app.get("/api/health", tags=["Système"])
 def health_check():
     return {
         "status": "healthy",
-        "service": "TENIRA TRAVAUX Backend API",
+        "service": "RB INDUSTRIEL Backend API",
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT
     }
@@ -66,7 +67,7 @@ def health_check():
 @app.get("/", tags=["Système"])
 def root():
     return {
-        "company": "TENIRA TRAVAUX",
+        "company": "RB INDUSTRIEL",
         "manager": "Rachid BOUZAYD",
         "activity": "Gaz Industriels & Matériel de Soudage",
         "address": "Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca - Maroc",

@@ -7,12 +7,14 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useCompany } from '../context/CompanyContext';
 
 export default function Navbar({ onOpenFlyer }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [backendHealthy, setBackendHealthy] = useState(true);
   const location = useLocation();
   const { cartCount, setIsCartOpen } = useCart();
+  const { company } = useCompany();
 
   useEffect(() => {
     fetch('http://localhost:8000/api/health')
@@ -27,15 +29,17 @@ export default function Navbar({ onOpenFlyer }) {
           
           {/* Logo Brand */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-[#0D3823] text-white flex items-center justify-center font-bold text-lg shadow-sm group-hover:scale-105 transition">
-              <span className="font-serif">T</span>
-            </div>
+            <img 
+              src={company.logo_url || "/logo_rb_industriale.png"} 
+              alt={company.company_name || "RB INDUSTRIEL"} 
+              className="w-11 h-11 rounded-full object-cover shadow-sm group-hover:scale-105 transition border border-[#E8E1D5] shrink-0"
+            />
             <div className="flex flex-col">
-              <span className="text-xl font-extrabold tracking-tight text-[#141E18]">
-                Tenira<span className="text-[#0D3823]">Travaux</span>
+              <span className="text-xl font-black tracking-tight text-[#141E18]">
+                {company.company_name || "RB INDUSTRIEL"}
               </span>
               <span className="text-[10px] text-[#637067] font-medium tracking-wide -mt-1 hidden sm:block">
-                Gaz &amp; Soudage • Tit Mellil
+                {company.tagline || "Gaz & Soudage • Tit Mellil"}
               </span>
             </div>
           </Link>

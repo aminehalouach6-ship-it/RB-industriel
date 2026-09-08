@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { fetchProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
+import { useCompany } from '../context/CompanyContext';
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export default function ProductDetailPage() {
   const [added, setAdded] = useState(false);
 
   const { addToCart, openCodModal } = useCart();
+  const { company } = useCompany();
 
   useEffect(() => {
     async function load() {
@@ -62,8 +64,14 @@ export default function ProductDetailPage() {
   };
 
   const getWhatsAppUrl = () => {
-    const text = `Bonjour M. Rachid BOUZAYD, je souhaite des informations / commander : *${product.name}* (Qté: ${quantity}).`;
-    return `https://wa.me/212661490495?text=${encodeURIComponent(text)}`;
+    const raw = company?.whatsapp_phone || "212700950064";
+    let phone = raw.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
+      phone = '212' + phone.slice(1);
+    }
+    const mgr = company?.manager_name || 'Rachid BOUZAYD';
+    const text = `Bonjour M. ${mgr}, je souhaite des informations / commander : *${product.name}* (Qté: ${quantity}).`;
+    return `https://wa.me/${phone || '212700950064'}?text=${encodeURIComponent(text)}`;
   };
 
   return (
@@ -83,9 +91,13 @@ export default function ProductDetailPage() {
         {/* Left: Product Visual Presentation */}
         <div className="lg:col-span-6 bg-white p-8 rounded-3xl border border-[#E8E1D5] shadow-xs space-y-6 text-center">
           <div className="w-full h-80 bg-gradient-to-tr from-[#0D3823] to-[#1E5236] rounded-2xl flex flex-col items-center justify-center text-white p-8 relative overflow-hidden shadow-inner">
-            <span className="font-serif font-black text-6xl text-white/90">TT</span>
+            <img 
+              src={product.image_url || "/logo_rb_industriale.png"} 
+              alt={product.name} 
+              className="w-24 h-24 rounded-full object-cover shadow-md border-2 border-white/20" 
+            />
             <span className="mt-4 text-xs uppercase font-mono tracking-widest text-[#C3643B] font-bold">
-              TENIRA TRAVAUX TIT MELLIL
+              RB INDUSTRIEL TIT MELLIL
             </span>
             <p className="text-sm font-bold text-white mt-1 max-w-xs">{product.name}</p>
             {product.badge && (
@@ -215,7 +227,7 @@ export default function ProductDetailPage() {
           <div className="p-3.5 bg-[#FCF3EE] rounded-2xl border border-[#F2D7CB] text-xs text-[#8F3E1B] flex items-start gap-2.5">
             <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-[#C3643B]" />
             <div>
-              <strong className="block font-bold">Sécurité Tenira Travaux :</strong>
+              <strong className="block font-bold">Sécurité RB INDUSTRIEL :</strong>
               <span>Bouteilles certifiées 200 bars d'épreuve. Transport et arrimage vertical obligatoires avec chapeau de protection.</span>
             </div>
           </div>

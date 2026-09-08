@@ -9,8 +9,10 @@ import {
   Building2
 } from 'lucide-react';
 import { submitContact } from '../services/api';
+import { useCompany } from '../context/CompanyContext';
 
 export default function ContactSection() {
+  const { company } = useCompany();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -72,8 +74,8 @@ export default function ContactSection() {
           <div className="lg:col-span-5 bg-[#FAF7F2] rounded-2xl p-6 sm:p-8 border border-[#E8E1D5] space-y-6">
             <div>
               <span className="text-[10px] uppercase font-bold text-[#637067] tracking-wider block">Direction Générale</span>
-              <h3 className="text-lg font-bold text-[#141E18] mt-0.5">M. Rachid BOUZAYD, Gérant</h3>
-              <p className="text-xs text-[#637067]">TENIRA TRAVAUX S.A.R.L</p>
+              <h3 className="text-lg font-bold text-[#141E18] mt-0.5">M. {company.manager_name || "Rachid BOUZAYD"}, Gérant</h3>
+              <p className="text-xs text-[#637067]">{company.legal_name || company.company_name || "RB INDUSTRIEL S.A.R.L"}</p>
             </div>
 
             <div className="space-y-4 text-xs">
@@ -81,7 +83,7 @@ export default function ContactSection() {
                 <MapPin className="w-4 h-4 text-[#0D3823] shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold text-[#141E18] block">Adresse Officielle :</span>
-                  <span className="text-[#637067]">Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca - Maroc</span>
+                  <span className="text-[#637067]">{company.address || "Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca - Maroc"}</span>
                 </div>
               </div>
 
@@ -90,8 +92,8 @@ export default function ContactSection() {
                 <div>
                   <span className="font-bold text-[#141E18] block">Téléphones GSM :</span>
                   <div className="grid grid-cols-2 gap-2 mt-1 font-mono text-[11px]">
-                    <a href="tel:0661490495" className="text-[#0D3823] font-bold hover:underline">06 61 49 04 95</a>
-                    <a href="tel:0700950064" className="text-[#4B574F] hover:underline">07 00 95 00 64</a>
+                    <a href={`tel:${(company.phone_main || '0700950064').replace(/[^0-9]/g, '')}`} className="text-[#0D3823] font-bold hover:underline">{company.phone_main || "07 00 95 00 64"}</a>
+                    <a href="tel:0661490495" className="text-[#4B574F] hover:underline">06 61 49 04 95</a>
                     <a href="tel:0690907488" className="text-[#4B574F] hover:underline">06 90 90 74 88</a>
                     <a href="tel:0695958627" className="text-[#4B574F] hover:underline">06 95 95 86 27</a>
                   </div>
@@ -102,15 +104,7 @@ export default function ContactSection() {
                 <Phone className="w-4 h-4 text-[#637067] shrink-0" />
                 <div>
                   <span className="font-bold text-[#141E18]">Fixe :</span>
-                  <a href="tel:0522354868" className="ml-2 font-mono text-[#4B574F] hover:underline">05 22 35 48 68</a>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-[#637067] shrink-0" />
-                <div>
-                  <span className="font-bold text-[#141E18]">Email :</span>
-                  <a href="mailto:teniratravaux@gmail.com" className="ml-2 font-mono text-[#0D3823] hover:underline">teniratravaux@gmail.com</a>
+                  <a href={`tel:${(company.phone_fixed || '0522354868').replace(/[^0-9]/g, '')}`} className="ml-2 font-mono text-[#4B574F] hover:underline">{company.phone_fixed || "05 22 35 48 68"}</a>
                 </div>
               </div>
 
@@ -165,7 +159,7 @@ export default function ContactSection() {
                     <input
                       type="tel"
                       required
-                      placeholder="Ex: 06 61 49 04 95"
+                      placeholder="Ex: 07 00 95 00 64"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full p-2.5 bg-white border border-[#E8E1D5] rounded-xl outline-none focus:ring-1 focus:ring-[#0D3823]"

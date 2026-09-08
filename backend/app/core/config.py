@@ -3,7 +3,7 @@ from typing import List
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "TENIRA TRAVAUX - API Gaz Industriels & Soudage"
+    PROJECT_NAME: str = "RB INDUSTRIEL - API Gaz Industriels & Soudage"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { fetchCategories, fetchProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
+import { useCompany } from '../context/CompanyContext';
 import ProductDetailModal from '../components/ProductDetailModal';
 import { Link } from 'react-router-dom';
 
@@ -45,6 +46,7 @@ const GAS_BADGES = {
 };
 
 export default function HomePage({ onOpenFlyer }) {
+  const { company } = useCompany();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -131,7 +133,7 @@ export default function HomePage({ onOpenFlyer }) {
         <div className="absolute inset-0 z-0">
           <img
             src="/hero_bg.jpg"
-            alt="Atelier industriel gaz et soudage Tenira Travaux"
+            alt="Atelier industriel gaz et soudage RB INDUSTRIEL"
             className="w-full h-full object-cover object-center scale-100 transition-transform duration-1000"
           />
           {/* Subtle light overlay so workshop background remains clearly visible and recognizable */}
@@ -478,86 +480,97 @@ export default function HomePage({ onOpenFlyer }) {
 
       </div>
 
-      {/* 4. Complete Information Block: "Toutes les informations concernant ceci là" */}
+      {/* 4. Localisation Block: Dépôt Tit Mellil, Casablanca */}
       <div id="informations" className="border-t border-[#E8E1D5] bg-white py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-[10px] font-black uppercase tracking-widest text-[#C3643B] block">
-              DÉPÔT &amp; LOGISTIQUE OFFICIELS
+              LOCALISATION &amp; ACCÈS
             </span>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#141E18]">
-              Toutes les Informations Pratiques <span className="italic font-normal text-[#C3643B]">• Tenira Travaux</span>
+              Notre Localisation <span className="italic font-normal text-[#C3643B]">• Tit Mellil, Casablanca</span>
             </h2>
             <p className="text-xs text-[#637067]">
-              Présentation complète de notre infrastructure, nos coordonnées directes et nos conditions d'approvisionnement en gaz industriels et soudure.
+              Retrouvez notre dépôt principal pour l'enlèvement direct au comptoir et la distribution rapide de vos gaz industriels et matériel de soudage.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-xs">
-            
-            {/* Card 1: Dépôt Tit Mellil */}
-            <div className="bg-[#FAF7F2] p-6 rounded-3xl border border-[#E8E1D5] space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#0D3823] text-white flex items-center justify-center">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-[#141E18]">Dépôt &amp; Enlèvement Comptoir</h3>
-              <p className="text-[#637067] leading-relaxed">
-                Situé à <strong>Tit Mellil, Casablanca</strong>. Comptoir d'enlèvement direct avec quai de chargement et sécurisation des bouteilles.
-              </p>
-              <div className="pt-2 border-t border-[#E8E1D5] text-[#0D3823] font-bold">
-                ✓ Enlèvement immédiat sur place
-              </div>
-            </div>
+          {/* Localisation Container: Map + Address Card */}
+          <div className="bg-[#FAF7F2] border border-[#E8E1D5] rounded-3xl p-6 lg:p-8 shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+              
+              {/* Info Column */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-[#0D3823] text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <MapPin className="w-6 h-6 text-[#E8E1D5]" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#C3643B]">Dépôt Principal</span>
+                    <h3 className="text-lg font-bold text-[#141E18]">
+                      {company?.company_name || "RB INDUSTRIEL"}
+                    </h3>
+                  </div>
+                </div>
 
-            {/* Card 2: Horaires d'Ouverture */}
-            <div className="bg-[#FAF7F2] p-6 rounded-3xl border border-[#E8E1D5] space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#0D3823] text-white flex items-center justify-center">
-                <Clock className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-[#141E18]">Horaires d'Ouverture</h3>
-              <p className="text-[#637067] leading-relaxed">
-                <strong>Lundi au Samedi :</strong><br />
-                08h00 - 18h30 sans interruption.<br />
-                <strong>Dimanche :</strong> Permanence d'urgence chantiers sur appel.
-              </p>
-              <div className="pt-2 border-t border-[#E8E1D5] text-[#0D3823] font-bold">
-                ✓ Service continu 6j/7
-              </div>
-            </div>
+                <div className="space-y-3 text-xs text-[#637067]">
+                  <div className="p-4 rounded-2xl bg-white border border-[#E8E1D5] space-y-1.5">
+                    <p className="font-bold text-[#141E18] text-sm">Adresse Officielle :</p>
+                    <p className="leading-relaxed">
+                      {company?.address || "Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca - Maroc"}
+                    </p>
+                    <p className="text-[11px] text-[#0D3823] font-semibold pt-1">
+                      {company?.manager_name ? `Gérant : M. ${company.manager_name}` : "Gérant : M. Rachid BOUZAYD"}
+                    </p>
+                  </div>
 
-            {/* Card 3: Contact & Téléphones (Direct Flyer) */}
-            <div className="bg-[#FAF7F2] p-6 rounded-3xl border border-[#E8E1D5] space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#C3643B] text-white flex items-center justify-center">
-                <Phone className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-[#141E18]">Contacts Officiels (Flyer)</h3>
-              <div className="text-[#637067] space-y-1">
-                <p><strong>Gérant :</strong> M. Rachid BOUZAYD</p>
-                <p className="font-mono text-[#0D3823] font-bold">📱 06 61 49 04 95 (WhatsApp)</p>
-                <p className="font-mono">📱 07 00 95 00 64</p>
-                <p className="font-mono">📱 06 90 90 74 88</p>
-                <p className="font-mono">📱 06 95 95 86 27</p>
-                <p className="font-mono">☎️ 05 22 35 48 68 (Fixe)</p>
-                <p>✉️ <strong>teniratravaux@gmail.com</strong></p>
-              </div>
-            </div>
+                  <div className="p-3.5 rounded-2xl bg-white border border-[#E8E1D5] flex items-center gap-3">
+                    <Clock className="w-4 h-4 text-[#0D3823] shrink-0" />
+                    <div>
+                      <span className="font-bold text-[#141E18] block">Horaires Dépôt :</span>
+                      <span>Lundi - Samedi : 08h00 - 18h30 (Enlèvement direct)</span>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Card 4: Flotte & Livraison Grand Casa */}
-            <div className="bg-[#FAF7F2] p-6 rounded-3xl border border-[#E8E1D5] space-y-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#0D3823] text-white flex items-center justify-center">
-                <Truck className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-[#141E18]">Zones de Livraison 24h</h3>
-              <p className="text-[#637067] leading-relaxed">
-                Camions hayon élévateur desservant :<br />
-                <strong>Tit Mellil, Sidi Bernoussi, Ain Sebaa, Oukacha, Mohammedia, Bouskoura, Nouaceur</strong> et tout le Grand Casablanca.
-              </p>
-              <div className="pt-2 border-t border-[#E8E1D5] text-[#0D3823] font-bold">
-                ✓ Livraison sécurisée sur site
-              </div>
-            </div>
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 pt-2">
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Tit+Mellil+Casablanca"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-5 py-3 rounded-2xl bg-[#0D3823] hover:bg-[#141E18] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition"
+                  >
+                    <MapPin className="w-4 h-4 text-[#C3643B]" />
+                    <span>Ouvrir dans Google Maps</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+                  </a>
 
+                  <a
+                    href={`tel:${(company?.phone_main || '0700950064').replace(/[^0-9]/g, '')}`}
+                    className="px-5 py-3 rounded-2xl bg-white hover:bg-[#FAF7F2] border border-[#E8E1D5] text-[#141E18] font-bold text-xs flex items-center justify-center gap-2 transition"
+                  >
+                    <Phone className="w-4 h-4 text-[#0D3823]" />
+                    <span>Appeler le Dépôt ({company?.phone_main || '07 00 95 00 64'})</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Map Column (2 spans on desktop) */}
+              <div className="lg:col-span-2 h-[340px] sm:h-[400px] w-full rounded-2xl overflow-hidden border border-[#E8E1D5] shadow-inner relative bg-slate-100">
+                <iframe
+                  title="Localisation Tit Mellil RB INDUSTRIEL"
+                  src="https://maps.google.com/maps?q=Tit%20Mellil,%20Casablanca,%20Morocco&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                  width="100%"
+                  height="100%"
+                  className="w-full h-full border-0"
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+
+            </div>
           </div>
 
           {/* Banner Contact Direct */}
@@ -565,13 +578,13 @@ export default function HomePage({ onOpenFlyer }) {
             <div className="space-y-1 text-center md:text-left">
               <h3 className="text-xl font-black">Besoin d'un devis sur mesure ou d'une recharge urgente ?</h3>
               <p className="text-xs text-emerald-200">
-                Contactez directement Rachid BOUZAYD pour une confirmation immédiate de disponibilité de vos bouteilles B50.
+                Contactez directement {company?.manager_name ? `M. ${company.manager_name}` : "Rachid BOUZAYD"} pour une confirmation immédiate de disponibilité de vos bouteilles B50.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <a
-                href="https://wa.me/212661490495?text=Bonjour%20M.%20BOUZAYD,%20je%20souhaite%20un%20devis%20imm%C3%A9diat%20pour%20des%20gaz%20ou%20du%20mat%C3%A9riel%20de%20soudage."
+                href={`https://wa.me/${(company?.whatsapp_phone || '212700950064').replace(/[^0-9]/g, '').replace(/^0/, '212')}?text=Bonjour,%20je%20souhaite%20un%20devis%20imm%C3%A9diat%20pour%20des%20gaz%20ou%20du%20mat%C3%A9riel%20de%20soudage.`}
                 target="_blank"
                 rel="noreferrer"
                 className="px-6 py-3 rounded-full bg-white hover:bg-[#FAF7F2] text-[#0D3823] font-bold text-xs flex items-center gap-2 shadow-md transition"
@@ -581,11 +594,11 @@ export default function HomePage({ onOpenFlyer }) {
               </a>
 
               <a
-                href="tel:0661490495"
+                href={`tel:${(company?.phone_main || '0700950064').replace(/[^0-9]/g, '')}`}
                 className="px-6 py-3 rounded-full bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs flex items-center gap-2 transition"
               >
                 <Phone className="w-4 h-4" />
-                <span>Appeler : 06 61 49 04 95</span>
+                <span>Appeler : {company?.phone_main || "07 00 95 00 64"}</span>
               </a>
             </div>
           </div>

@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { useCompany } from '../context/CompanyContext';
 
 export default function Footer({ onOpenFlyer }) {
+  const { company } = useCompany();
+
   return (
     <footer className="bg-[#FAF7F2] border-t border-[#E8E1D5] py-12 text-xs text-[#637067]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -11,18 +14,20 @@ export default function Footer({ onOpenFlyer }) {
           
           {/* Col 1 */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#0D3823] text-white flex items-center justify-center font-bold text-sm font-serif">
-                T
-              </div>
-              <span className="font-extrabold text-base text-[#141E18]">TENIRA TRAVAUX</span>
+            <div className="flex items-center gap-2.5">
+              <img 
+                src={company.logo_url || "/logo_rb_industriale.png"} 
+                alt={company.company_name || "RB INDUSTRIEL"} 
+                className="w-9 h-9 rounded-full object-cover shadow-sm border border-[#E8E1D5]" 
+              />
+              <span className="font-extrabold text-base text-[#141E18]">{company.company_name || "RB INDUSTRIEL"}</span>
             </div>
             <p className="leading-relaxed">
-              Gaz Industriels &amp; Matériel de Soudage.<br />
+              {company.tagline || "Gaz Industriels & Matériel de Soudage."}<br />
               Vente • Distribution • Livraison Tit Mellil &amp; Maroc.
             </p>
             <p className="text-[#141E18] font-bold">
-              Gérant : M. Rachid BOUZAYD
+              Gérant : M. {company.manager_name || "Rachid BOUZAYD"}
             </p>
           </div>
 
@@ -51,18 +56,37 @@ export default function Footer({ onOpenFlyer }) {
           </div>
 
           {/* Col 4 */}
-          <div className="space-y-2">
-            <h4 className="font-bold text-[#141E18] uppercase tracking-wider text-[11px]">Coordonnées Directes</h4>
-            <p>Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca</p>
-            <p className="font-mono text-[#0D3823] font-bold">GSM : 06 61 49 04 95</p>
-            <p className="font-mono text-[#4B574F]">Fixe : 05 22 35 48 68</p>
-            <p className="font-mono text-[#0D3823]">teniratravaux@gmail.com</p>
+          <div className="space-y-2.5">
+            <h4 className="font-extrabold text-[#141E18] uppercase tracking-wider text-[11px]">Coordonnées Directes</h4>
+            <p className="leading-relaxed text-[#637067]">
+              {company.address || "Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca - Maroc"}
+            </p>
+            <div className="space-y-1.5 text-xs font-sans">
+              <p className="text-[#141E18]">
+                <span className="font-bold text-[#0D3823]">GSM : </span>
+                <a 
+                  href={`tel:${(company.phone_main || '0700950064').replace(/[^0-9]/g, '')}`} 
+                  className="font-bold text-[#0D3823] hover:underline transition"
+                >
+                  {company.phone_main || "07 00 95 00 64"}
+                </a>
+              </p>
+              <p className="text-[#4B574F]">
+                <span className="font-semibold text-[#141E18]">Fixe : </span>
+                <a 
+                  href={`tel:${(company.phone_fixed || '0522354868').replace(/[^0-9]/g, '')}`} 
+                  className="font-medium hover:text-[#0D3823] transition"
+                >
+                  {company.phone_fixed || "05 22 35 48 68"}
+                </a>
+              </p>
+            </div>
           </div>
 
         </div>
 
         <div className="pt-6 border-t border-[#E8E1D5] flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-[#8C9890]">
-          <p>© 2026 TENIRA TRAVAUX. Tit Mellil, Casablanca, Maroc. Tous droits réservés.</p>
+          <p>© 2026 {company.company_name || "RB INDUSTRIEL"} ({company.manager_name || "Rachid BOUZAYD"}). {company.city || "Tit Mellil, Casablanca, Maroc"}. Tous droits réservés.</p>
           <div className="flex items-center gap-3">
             <span>Livraison Rapide &amp; Sécurisée</span>
             <span>•</span>

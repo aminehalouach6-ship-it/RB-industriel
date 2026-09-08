@@ -28,8 +28,10 @@ import {
   LogOut,
   ShieldCheck,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Building2
 } from 'lucide-react';
+import { useCompany } from '../context/CompanyContext';
 import { 
   fetchProducts, 
   fetchCategories, 
@@ -42,6 +44,7 @@ import {
   deleteProduct,
   fetchQuotes,
   adminLogin,
+  changeAdminPassword,
   uploadProductImage
 } from '../services/api';
 import { Link } from 'react-router-dom';
@@ -89,9 +92,94 @@ export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [quotes, setQuotes] = useState([]);
   
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'products' | 'quotes'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'products' | 'quotes' | 'company'
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Company Settings & Logo from PostgreSQL
+  const { company, updateCompany, uploadLogo, refreshCompany } = useCompany();
+  const [companyForm, setCompanyForm] = useState(company);
+  const [companySaving, setCompanySaving] = useState(false);
+  const [companySuccessMsg, setCompanySuccessMsg] = useState('');
+  const [logoUploading, setLogoUploading] = useState(false);
+
+  useEffect(() => {
+    if (company) {
+      setCompanyForm(company);
+    }
+  }, [company]);
+
+  const handleSaveCompany = async (e) => {
+    e.preventDefault();
+    setCompanySaving(true);
+    setCompanySuccessMsg('');
+    try {
+      await updateCompany(companyForm);
+      setCompanySuccessMsg('Paramètres officiels enregistrés avec succès dans PostgreSQL !');
+      setTimeout(() => setCompanySuccessMsg(''), 4000);
+    } catch (err) {
+      alert('Erreur lors de la sauvegarde : ' + err.message);
+    } finally {
+      setCompanySaving(false);
+    }
+  };
+
+  // Change Password State & Handler (PostgreSQL Backend)
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Les deux nouveaux mots de passe ne correspondent pas.");
+      return;
+    }
+
+    if (newPassword.length < 4) {
+      setPasswordError("Le nouveau mot de passe doit contenir au moins 4 caractères.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const res = await changeAdminPassword(adminUser || 'admin', currentPassword, newPassword);
+      setPasswordSuccess(res.message || "Mot de passe modifié avec succès dans la base de données PostgreSQL !");
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setPasswordSuccess(''), 6000);
+    } catch (err) {
+      setPasswordError(err.message || "Erreur lors du changement de mot de passe.");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoUploading(true);
+    try {
+      await uploadLogo(file);
+      await refreshCompany();
+      setCompanySuccessMsg('Nouveau logo téléversé et mis à jour dans PostgreSQL !');
+      setTimeout(() => setCompanySuccessMsg(''), 4000);
+    } catch (err) {
+      alert('Erreur upload logo : ' + err.message);
+    } finally {
+      setLogoUploading(false);
+    }
+  };
 
   // Orders tracking filters
   const [orderSearch, setOrderSearch] = useState('');
@@ -332,12 +420,19 @@ export default function AdminPage() {
           
           {/* Brand & Security Header */}
           <div className="text-center space-y-3">
-            <div className="w-16 h-16 bg-[#0D3823] text-white rounded-3xl mx-auto flex items-center justify-center shadow-md">
-              <Lock className="w-8 h-8 text-emerald-300" />
+            <div className="relative w-20 h-20 mx-auto">
+              <img 
+                src="/logo_rb_industriale.png" 
+                alt="RB INDUSTRIALE" 
+                className="w-20 h-20 rounded-full object-cover shadow-lg border-2 border-[#0D3823]/20" 
+              />
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#0D3823] text-white rounded-full flex items-center justify-center shadow-md border-2 border-white">
+                <Lock className="w-3.5 h-3.5 text-emerald-300" />
+              </div>
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-[#C3643B]">
-                TENIRA TRAVAUX • TIT MELLIL
+                RB INDUSTRIEL • TIT MELLIL
               </span>
               <h2 className="text-2xl font-black text-[#141E18] tracking-tight mt-1">
                 Espace Administrateur
@@ -369,7 +464,7 @@ export default function AdminPage() {
                   required
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="admin"
+                  placeholder="Identifiant"
                   className="w-full pl-10 pr-4 py-3 bg-[#FAF7F2] rounded-2xl border border-[#E8E1D5] text-xs font-semibold text-[#141E18] outline-none focus:border-[#0D3823] focus:ring-1 focus:ring-[#0D3823]"
                 />
               </div>
@@ -419,15 +514,10 @@ export default function AdminPage() {
             </button>
           </form>
 
-          {/* Demo Hint Card */}
-          <div className="p-3.5 bg-[#FAF7F2] rounded-2xl border border-[#E8E1D5] text-[11px] text-[#637067] space-y-1">
-            <div className="font-bold text-[#141E18] flex items-center gap-1.5">
-              <span>💡 Identifiants par défaut :</span>
-            </div>
-            <div className="flex justify-between font-mono pt-0.5">
-              <span>Utilisateur : <strong className="text-[#0D3823]">admin</strong></span>
-              <span>Mot de passe : <strong className="text-[#0D3823]">tenira2024</strong></span>
-            </div>
+          {/* Secure Portal Info */}
+          <div className="p-3.5 bg-[#FAF7F2] rounded-2xl border border-[#E8E1D5] text-[11px] text-[#637067] flex items-center justify-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+            <span>Portail d'administration sécurisé &bull; Authentification chiffrée</span>
           </div>
 
           <div className="text-center pt-2">
@@ -466,7 +556,7 @@ export default function AdminPage() {
               </span>
             </div>
             <h1 className="text-3xl font-serif font-bold text-[#141E18] tracking-tight mt-1">
-              Admin Studio <span className="italic font-normal text-[#C3643B]">• Tenira Travaux</span>
+              Admin Studio <span className="italic font-normal text-[#C3643B]">• RB INDUSTRIEL</span>
             </h1>
             <p className="text-xs text-[#637067]">
               Pilotage direct des commandes, suivi logistique Tit Mellil &amp; gestion dynamique du catalogue.
@@ -588,6 +678,30 @@ export default function AdminPage() {
             <FileText className="w-3.5 h-3.5" />
             <span>Devis Express ({quotes.length})</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('company')}
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'company' 
+                ? 'bg-[#0D3823] text-white shadow-xs' 
+                : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Paramètres Entreprise &amp; Logo</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('security')}
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+              activeTab === 'security' 
+                ? 'bg-[#0D3823] text-white shadow-xs' 
+                : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
+            }`}
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Sécurité &amp; Mot de Passe</span>
+          </button>
         </div>
 
         {/* 4. TAB CONTENT: ORDERS TRACKING */}
@@ -651,7 +765,7 @@ export default function AdminPage() {
 
                   // Pre-filled WhatsApp message for customer
                   const waCustomerMsg = `Bonjour ${order.customer_name},\n` +
-                    `Concernant votre commande ${order.order_reference} d'un montant de ${order.total_estimated} MAD chez TENIRA TRAVAUX (Tit Mellil):\n` +
+                    `Concernant votre commande ${order.order_reference} d'un montant de ${order.total_estimated} MAD chez RB INDUSTRIEL (Tit Mellil):\n` +
                     `Statut actuel : ${statusConf.label}.\n` +
                     `Notre équipe logistique reste à votre disposition.`;
 
@@ -943,7 +1057,7 @@ export default function AdminPage() {
                         <td className="py-3 font-bold">{q.estimated_total?.toLocaleString('fr-FR')} MAD</td>
                         <td className="py-3 text-right">
                           <a
-                            href={`https://wa.me/${(q.phone || '').replace(/[^0-9]/g, '')}?text=Bonjour%20${encodeURIComponent(q.client_name)},%20concernant%20votre%20devis%20${q.quote_reference}%20chez%20TENIRA%20TRAVAUX.`}
+                            href={`https://wa.me/${(q.phone || '').replace(/[^0-9]/g, '')}?text=Bonjour%20${encodeURIComponent(q.client_name)},%20concernant%20votre%20devis%20${q.quote_reference}%20chez%20RB%20INDUSTRIEL.`}
                             target="_blank"
                             rel="noreferrer"
                             className="px-3 py-1 rounded-full bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 inline-flex items-center gap-1"
@@ -958,6 +1072,395 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* 5. TAB CONTENT: COMPANY SETTINGS & LOGO (POSTGRESQL) */}
+        {activeTab === 'company' && (
+          <div className="bg-white rounded-3xl border border-[#E8E1D5] shadow-xs p-6 sm:p-8 space-y-6">
+            
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#E8E1D5] gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="text-[10px] uppercase font-black tracking-wider text-[#0D3823]">
+                    PostgreSQL (Table: company_settings) • FastAPI Live
+                  </span>
+                </div>
+                <h2 className="text-2xl font-black text-[#141E18] tracking-tight mt-1">
+                  Identité de Marque &amp; Paramètres Officiels
+                </h2>
+                <p className="text-xs text-[#637067] mt-0.5">
+                  Toutes les informations enregistrées ici sont immédiatement stockées en base de données et affichées en direct sur le site web.
+                </p>
+              </div>
+
+              <div className="px-4 py-2 rounded-2xl bg-[#FAF7F2] border border-[#E8E1D5] text-xs font-mono text-[#0D3823] font-bold self-start">
+                ID Config : #{companyForm?.id || 1}
+              </div>
+            </div>
+
+            {/* Success Alert Banner */}
+            {companySuccessMsg && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs text-emerald-800 font-bold animate-fade-in shadow-xs">
+                <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>{companySuccessMsg}</span>
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSaveCompany} className="space-y-6">
+              
+              {/* Logo Section */}
+              <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#E8E1D5] space-y-4">
+                <span className="text-[11px] uppercase font-bold text-[#637067] tracking-wider block">
+                  1. Logo Officiel de l'Entreprise
+                </span>
+
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  {/* Current Logo Preview */}
+                  <div className="relative group shrink-0">
+                    <img
+                      src={companyForm?.logo_url || '/logo_rb_industriale.png'}
+                      alt="Logo RB INDUSTRIEL"
+                      className="w-24 h-24 rounded-full object-cover shadow-md border-2 border-white bg-white"
+                    />
+                    <span className="absolute -bottom-2 -right-2 px-2 py-0.5 bg-[#0D3823] text-white text-[9px] font-black rounded-full uppercase">
+                      Actif
+                    </span>
+                  </div>
+
+                  {/* Upload Controls */}
+                  <div className="space-y-2 text-center sm:text-left">
+                    <h4 className="font-bold text-xs text-[#141E18]">
+                      Téléverser une nouvelle image de logo
+                    </h4>
+                    <p className="text-[11px] text-[#637067]">
+                      L'image sera stockée dans le volume Docker persistant et l'URL sera automatiquement enregistrée dans PostgreSQL.
+                    </p>
+                    
+                    <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-[#E8E1D5] hover:border-[#0D3823] text-[#141E18] text-xs font-bold shadow-xs cursor-pointer transition">
+                      <Upload className="w-3.5 h-3.5 text-[#0D3823]" />
+                      <span>{logoUploading ? "Téléversement vers Docker..." : "📁 Choisir une nouvelle photo de logo"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        disabled={logoUploading}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid: Identité & Coordonnées */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+                
+                {/* Nom Commercial */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Nom Commercial de l'Entreprise <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={companyForm?.company_name || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, company_name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823] font-bold"
+                  />
+                  <span className="text-[10px] text-[#8C9890]">Affiché dans l'en-tête, le titre et les cartes</span>
+                </div>
+
+                {/* Raison Sociale */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Raison Sociale / Statut Juridique
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm?.legal_name || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, legal_name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                  />
+                  <span className="text-[10px] text-[#8C9890]">Ex: RB INDUSTRIEL S.A.R.L</span>
+                </div>
+
+                {/* Gérant */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Nom &amp; Prénom du Gérant
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm?.manager_name || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, manager_name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                  />
+                  <span className="text-[10px] text-[#8C9890]">M. Rachid BOUZAYD</span>
+                </div>
+
+                {/* Slogan / Activité */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Slogan / Activité Principale
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm?.tagline || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, tagline: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                  />
+                  <span className="text-[10px] text-[#8C9890]">Gaz Industriels &amp; Matériel de Soudage • Tit Mellil</span>
+                </div>
+
+                {/* GSM Principal */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Téléphone GSM Principal
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm?.phone_main || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, phone_main: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823] font-mono"
+                  />
+                </div>
+
+                {/* Téléphone Fixe */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Téléphone Fixe (Atelier / Comptoir)
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm?.phone_fixed || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, phone_fixed: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823] font-mono"
+                  />
+                </div>
+
+                {/* WhatsApp */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Numéro WhatsApp (Format international sans +)
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm?.whatsapp_phone || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, whatsapp_phone: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823] font-mono"
+                  />
+                  <span className="text-[10px] text-[#8C9890]">Ex: 212700950064</span>
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Email Officiel
+                  </label>
+                  <input
+                    type="email"
+                    value={companyForm?.email || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                  />
+                </div>
+
+                {/* Adresse */}
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Adresse Officielle Complète
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm?.address || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, address: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                  />
+                </div>
+
+                {/* Ville */}
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="font-bold text-[#141E18]">
+                    Ville / Dépôt
+                  </label>
+                  <input
+                    type="text"
+                    value={companyForm?.city || ''}
+                    onChange={(e) => setCompanyForm({ ...companyForm, city: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                  />
+                </div>
+
+              </div>
+
+              {/* Submit button */}
+              <div className="pt-4 border-t border-[#E8E1D5] flex items-center justify-end gap-3">
+                <button
+                  type="submit"
+                  disabled={companySaving}
+                  className="px-6 py-3 rounded-2xl bg-[#0D3823] hover:bg-[#072416] text-white font-bold text-xs shadow-md transition hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                  <span>{companySaving ? "Enregistrement dans PostgreSQL..." : "💾 Enregistrer dans la Base de Données (PostgreSQL)"}</span>
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        )}
+
+        {/* 5. TAB CONTENT: SECURITY & DATABASE AUTHENTICATION */}
+        {activeTab === 'security' && (
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E1D5] shadow-xs space-y-6 max-w-3xl">
+            
+            <div className="flex items-start justify-between gap-4 border-b border-[#E8E1D5] pb-5">
+              <div>
+                <span className="text-[10px] font-bold text-[#C3643B] uppercase tracking-wider block">
+                  Sécurité &amp; Authentification Backend
+                </span>
+                <h3 className="text-xl font-serif font-bold text-[#141E18]">
+                  Gestion du Mot de Passe Administrateur
+                </h3>
+                <p className="text-xs text-[#637067] mt-1">
+                  L'authentification est directement traitée par le backend FastAPI et stockée de manière sécurisée (hash PBKDF2) dans votre base de données PostgreSQL.
+                </p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-[#0D3823] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Lock className="w-6 h-6 text-emerald-300" />
+              </div>
+            </div>
+
+            {/* Database status banner */}
+            <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E8E1D5] flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-emerald-700" />
+                <div>
+                  <span className="font-bold text-[#141E18] block">Moteur d'Authentification : PostgreSQL</span>
+                  <span className="text-[#637067]">Session active &bull; Identifiants gérés côté serveur</span>
+                </div>
+              </div>
+              <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                En Ligne &amp; Synchronisé
+              </span>
+            </div>
+
+            {/* Notifications */}
+            {passwordSuccess && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2.5">
+                <CheckCircle className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span>{passwordSuccess}</span>
+              </div>
+            )}
+
+            {passwordError && (
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 text-rose-700 shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            {/* Password Change Form */}
+            <form onSubmit={handleChangePassword} className="space-y-4 text-xs">
+
+              <div>
+                <label className="font-bold text-[#141E18] block mb-1.5">
+                  Mot de passe actuel *
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-[#8C9890] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    required
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Saisissez votre mot de passe actuel"
+                    className="w-full pl-10 pr-10 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8C9890] hover:text-[#141E18]"
+                  >
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="font-bold text-[#141E18] block mb-1.5">
+                    Nouveau mot de passe *
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-[#8C9890] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      required
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Minimum 4 caractères"
+                      className="w-full pl-10 pr-10 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8C9890] hover:text-[#141E18]"
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-[#141E18] block mb-1.5">
+                    Confirmer le nouveau mot de passe *
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-[#8C9890] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirmez le nouveau mot de passe"
+                      className="w-full pl-10 pr-10 py-2.5 bg-[#FAF7F2] rounded-xl border border-[#E8E1D5] outline-none focus:border-[#0D3823]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8C9890] hover:text-[#141E18]"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#E8E1D5] flex items-center justify-end">
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="px-6 py-3 rounded-2xl bg-[#0D3823] hover:bg-[#072416] text-white font-bold text-xs shadow-md transition hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {passwordLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Mise à jour dans PostgreSQL...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                      <span>Enregistrer le Nouveau Mot de Passe dans PostgreSQL</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
           </div>
         )}
 

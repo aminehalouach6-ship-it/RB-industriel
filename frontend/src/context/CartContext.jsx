@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useCompany } from './CompanyContext';
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
+  const { company } = useCompany();
   const [cart, setCart] = useState(() => {
     try {
       const saved = localStorage.getItem('tenira_cart');
@@ -76,7 +78,7 @@ export function CartProvider({ children }) {
   );
 
   const generateWhatsAppMessage = (customerInfo = {}) => {
-    let text = `*COMMANDE / DEVIS - TENIRA TRAVAUX*\n`;
+    let text = `*COMMANDE / DEVIS - RB INDUSTRIALE*\n`;
     text += `--------------------------------------\n`;
     if (customerInfo.name) text += `*Client / Société:* ${customerInfo.name}\n`;
     if (customerInfo.phone) text += `*Téléphone:* ${customerInfo.phone}\n`;
@@ -100,14 +102,18 @@ export function CartProvider({ children }) {
       text += `*Remarque:* ${customerInfo.notes}\n`;
     }
     text += `--------------------------------------\n`;
-    text += `À l'attention de M. Rachid BOUZAYD (Gérant Tenira Travaux, Tit Mellil)`;
+    text += `À l'attention de M. ${company?.manager_name || 'Rachid BOUZAYD'} (Gérant ${company?.company_name || 'RB INDUSTRIEL'}, ${company?.city || 'Tit Mellil'})`;
     return encodeURIComponent(text);
   };
 
   const getWhatsAppUrl = (customerInfo = {}) => {
-    const phone = "212661490495";
+    const raw = company?.whatsapp_phone || "212700950064";
+    let phone = raw.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
+      phone = '212' + phone.slice(1);
+    }
     const msg = generateWhatsAppMessage(customerInfo);
-    return `https://wa.me/${phone}?text=${msg}`;
+    return `https://wa.me/${phone || '212700950064'}?text=${msg}`;
   };
 
   return (

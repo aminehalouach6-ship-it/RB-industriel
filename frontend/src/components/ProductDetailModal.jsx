@@ -1,11 +1,13 @@
 import React from 'react';
 import { X, CheckCircle, ShieldAlert, ShoppingCart, MessageCircle, Phone, FileCheck, Send } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useCompany } from '../context/CompanyContext';
 
 export default function ProductDetailModal({ product, onClose }) {
   if (!product) return null;
 
   const { addToCart, openCodModal } = useCart();
+  const { company } = useCompany();
 
   const handleAddAndClose = () => {
     addToCart(product, 1);
@@ -54,7 +56,7 @@ export default function ProductDetailModal({ product, onClose }) {
               {product.name}
             </h2>
             <p className="text-xs text-[#0D3823] font-bold mt-1">
-              TENIRA TRAVAUX • Tit Mellil, Casablanca (M. Rachid BOUZAYD)
+              RB INDUSTRIEL • Tit Mellil, Casablanca (M. Rachid BOUZAYD)
             </p>
           </div>
 
@@ -95,7 +97,7 @@ export default function ProductDetailModal({ product, onClose }) {
           <div className="p-3.5 bg-[#FCF3EE] rounded-2xl border border-[#F2D7CB] text-xs text-[#9C3814] flex items-start gap-2.5">
             <ShieldAlert className="w-4 h-4 text-[#C3643B] shrink-0 mt-0.5" />
             <div>
-              <strong className="block font-bold">Consignes de Sécurité Tenira Travaux :</strong>
+              <strong className="block font-bold">Consignes de Sécurité RB INDUSTRIEL :</strong>
               <span>
                 Manipulation sécurisée avec équipements EPI adaptés (masque, gants ignifugés). Transport des bouteilles en position verticale amarrée avec chapeaux protecteurs. Éprouvage certifié 200 bar.
               </span>
@@ -140,8 +142,8 @@ export default function ProductDetailModal({ product, onClose }) {
             </button>
 
             <a
-              href={`https://wa.me/212661490495?text=${encodeURIComponent(
-                `Bonjour M. Rachid BOUZAYD, je souhaite commander : ${product.name} (${product.unit}). Pouvez-vous me confirmer le stock et délai de livraison ?`
+              href={`https://wa.me/${(company?.whatsapp_phone || '212700950064').replace(/[^0-9]/g, '').replace(/^0/, '212')}?text=${encodeURIComponent(
+                `Bonjour M. ${company?.manager_name || 'Rachid BOUZAYD'}, je souhaite commander : ${product.name} (${product.unit}). Pouvez-vous me confirmer le stock et délai de livraison ?`
               )}`}
               target="_blank"
               rel="noreferrer"

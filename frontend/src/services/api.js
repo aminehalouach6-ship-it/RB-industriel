@@ -132,7 +132,7 @@ export const FALLBACK_PRODUCTS = [
     slug: "poste-inverter-mma-200a-lcd",
     category_id: 2,
     short_desc: "Poste à souder à technologie IGBT avec écran digital LCD rétroéclairé vert et noir.",
-    description: "Le modèle star de l'affiche officielle Tenira Travaux ! Afficheur digital précis, amorçage Hot Start instantané, Arc Force dynamique et protection thermique intégrée.",
+    description: "Le modèle star de l'affiche officielle RB INDUSTRIEL ! Afficheur digital précis, amorçage Hot Start instantané, Arc Force dynamique et protection thermique intégrée.",
     price_estimate: 2150.0,
     unit: "Pack Complet avec Câbles & Masque",
     in_stock: true,
@@ -277,7 +277,7 @@ export const FALLBACK_PRODUCTS = [
     slug: "cagoule-soudage-automatique-lcd-true-color",
     category_id: 6,
     short_desc: "Masque électronique à assombrissement ultra-rapide 1/30000s avec vision des couleurs réelles.",
-    description: "Le masque visible sur l'affiche Tenira Travaux. Technologie True Color : fini la vision verte terne, observez votre bain de fusion dans sa coloration naturelle avec une clarté optique 1/1/1/2.",
+    description: "Le masque visible sur l'affiche RB INDUSTRIEL. Technologie True Color : fini la vision verte terne, observez votre bain de fusion dans sa coloration naturelle avec une clarté optique 1/1/1/2.",
     price_estimate: 690.0,
     unit: "Kit avec écrans de rechange",
     in_stock: true,
@@ -512,6 +512,23 @@ export async function adminLogin(username, password) {
   return await res.json();
 }
 
+export async function changeAdminPassword(username, currentPassword, newPassword) {
+  const res = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: username || "admin",
+      current_password: currentPassword,
+      new_password: newPassword
+    })
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || "Erreur lors du changement de mot de passe.");
+  }
+  return await res.json();
+}
+
 export async function uploadProductImage(file) {
   const formData = new FormData();
   formData.append('file', file);
@@ -528,5 +545,62 @@ export async function uploadProductImage(file) {
 
   return await res.json();
 }
+
+export async function getCompanySettings() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/company`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.warn("Company settings API offline, fallback to defaults:", err);
+  }
+  return {
+    company_name: "RB INDUSTRIEL",
+    legal_name: "RB INDUSTRIEL S.A.R.L",
+    manager_name: "Rachid BOUZAYD",
+    tagline: "Gaz Industriels & Matériel de Soudage • Tit Mellil",
+    logo_url: "/logo_rb_industriale.png",
+    flyer_url: "/carte_officielle_tenira.png",
+    flyer_4k_url: "/carte_officielle_tenira_4k.png",
+    phone_main: "07 00 95 00 64",
+    phone_fixed: "05 22 35 48 68",
+    whatsapp_phone: "212700950064",
+    email: "",
+    address: "Hay Amal 1, N° 92, Appt N° 8, Tit Mellil, Casablanca - Maroc",
+    city: "Tit Mellil, Casablanca"
+  };
+}
+
+export async function updateCompanySettings(data) {
+  const res = await fetch(`${API_BASE_URL}/company`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || "Erreur lors de la mise à jour des paramètres.");
+  }
+  return await res.json();
+}
+
+export async function uploadCompanyLogo(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE_URL}/company/logo`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || "Erreur lors du téléversement du logo.");
+  }
+
+  return await res.json();
+}
+
 
 

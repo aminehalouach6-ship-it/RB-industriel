@@ -6,8 +6,10 @@ import {
   Clock,
   ShieldCheck
 } from 'lucide-react';
+import { useCompany } from '../context/CompanyContext';
 
 export default function DeliverySection() {
+  const { company } = useCompany();
   return (
     <section id="livraison" className="py-16 bg-[#FAF7F2] border-t border-[#E8E1D5]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,14 +78,14 @@ export default function DeliverySection() {
         <div className="bg-white rounded-2xl p-6 border border-[#E8E1D5] flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h4 className="font-bold text-sm text-[#141E18]">Une urgence de gaz sur votre chantier ?</h4>
-            <p className="text-xs text-[#637067]">Contactez directement notre gérant M. Rachid BOUZAYD pour un départ immédiat.</p>
+            <p className="text-xs text-[#637067]">Contactez directement notre gérant {company?.manager_name ? `M. ${company.manager_name}` : "M. Rachid BOUZAYD"} pour un départ immédiat.</p>
           </div>
           <a
-            href="tel:0661490495"
+            href={`tel:${(company?.phone_main || '0700950064').replace(/[^0-9]/g, '')}`}
             className="px-6 py-2.5 rounded-full bg-[#0D3823] hover:bg-[#072416] text-white font-bold text-xs flex items-center gap-2 shadow-xs transition"
           >
             <PhoneCall className="w-3.5 h-3.5" />
-            <span>06 61 49 04 95</span>
+            <span>{company?.phone_main || "07 00 95 00 64"}</span>
           </a>
         </div>
 

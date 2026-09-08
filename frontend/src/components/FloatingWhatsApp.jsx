@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import { MessageCircle, X, PhoneCall } from 'lucide-react';
+import { useCompany } from '../context/CompanyContext';
 
 export default function FloatingWhatsApp() {
   const [isOpen, setIsOpen] = useState(false);
+  const { company } = useCompany();
+
+  const phoneClean = (company.whatsapp_phone || '212700950064').replace(/[^0-9]/g, '').replace(/^0/, '212');
+  const mgr = company.manager_name || 'Rachid BOUZAYD';
+  const cName = company.company_name || 'RB INDUSTRIEL';
+  const waUrl = `https://wa.me/${phoneClean}?text=Bonjour%20M.%20${encodeURIComponent(mgr)},%20je%20vous%20contacte%20depuis%20votre%20site%20${encodeURIComponent(cName)}.`;
 
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end">
@@ -10,16 +17,18 @@ export default function FloatingWhatsApp() {
       {/* Tooltip / Popup message */}
       {isOpen && (
         <div className="mb-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-fade-in text-xs">
-          <div className="bg-tenira-dark p-3.5 text-white flex items-center justify-between">
+          <div className="bg-[#0D3823] p-3.5 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-emerald-600 font-bold flex items-center justify-center text-xs text-white">
-                RB
-              </div>
+              <img 
+                src={company.logo_url || "/logo_rb_industriale.png"} 
+                alt={cName} 
+                className="w-8 h-8 rounded-full object-cover shadow-sm border border-emerald-400/40" 
+              />
               <div>
-                <h4 className="font-bold text-white text-xs">Rachid BOUZAYD</h4>
+                <h4 className="font-bold text-white text-xs">{mgr}</h4>
                 <div className="flex items-center gap-1 text-[10px] text-emerald-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>En ligne • Tenira Travaux</span>
+                  <span>En ligne • {cName}</span>
                 </div>
               </div>
             </div>
@@ -37,7 +46,7 @@ export default function FloatingWhatsApp() {
             </p>
             
             <a
-              href="https://wa.me/212661490495?text=Bonjour%20M.%20Rachid%20BOUZAYD,%20je%20vous%20contacte%20depuis%20votre%20site%20TENIRA%20TRAVAUX."
+              href={waUrl}
               target="_blank"
               rel="noreferrer"
               className="block w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-center rounded-xl text-xs transition shadow-sm"

@@ -7,8 +7,8 @@ import {
   Plus,
   Minus,
   Send
-} from 'lucide-react';
 import { submitQuoteRequest } from '../services/api';
+import { useCompany } from '../context/CompanyContext';
 
 const QUICK_GAS_ITEMS = [
   { id: 'gas-o2', name: 'Oxygène B50 (10.5 m³)', price: 280, unit: 'Bouteille' },
@@ -31,6 +31,7 @@ const QUICK_EQUIPMENT_ITEMS = [
 ];
 
 export default function QuoteSimulator() {
+  const { company } = useCompany();
   const [quantities, setQuantities] = useState({});
   const [clientInfo, setClientInfo] = useState({
     name: '',
@@ -104,7 +105,7 @@ export default function QuoteSimulator() {
   };
 
   const getWhatsAppSimulatorUrl = () => {
-    let msg = `*DEMANDE DE DEVIS EXPRESS - TENIRA TRAVAUX*\n`;
+    let msg = `*DEMANDE DE DEVIS EXPRESS - RB INDUSTRIALE*\n`;
     msg += `--------------------------------------\n`;
     msg += `*Client / Contact:* ${clientInfo.name || 'Client'}\n`;
     if (clientInfo.company) msg += `*Société:* ${clientInfo.company}\n`;
@@ -119,7 +120,12 @@ export default function QuoteSimulator() {
     msg += `*Sous-total:* ${subtotal.toLocaleString('fr-FR')} MAD HT\n`;
     msg += `*Livraison (${clientInfo.city}):* ${deliveryFee === 0 ? 'Offerte' : deliveryFee + ' MAD'}\n`;
     msg += `*TOTAL ESTIMÉ:* ${totalEstimated.toLocaleString('fr-FR')} MAD HT\n`;
-    return `https://wa.me/212661490495?text=${encodeURIComponent(msg)}`;
+    const rawPhone = company?.whatsapp_phone || "212700950064";
+    let phone = rawPhone.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
+      phone = '212' + phone.slice(1);
+    }
+    return `https://wa.me/${phone || '212700950064'}?text=${encodeURIComponent(msg)}`;
   };
 
   return (

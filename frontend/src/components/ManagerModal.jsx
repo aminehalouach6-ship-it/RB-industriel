@@ -42,7 +42,7 @@ export default function ManagerModal({ isOpen, onClose }) {
             <LayoutDashboard className="w-5 h-5 text-emerald-400" />
             <div>
               <h3 className="font-bold text-sm">Tableau de Bord &amp; Supervision API</h3>
-              <p className="text-[11px] text-slate-400">TENIRA TRAVAUX • Espace Responsable Commercial</p>
+              <p className="text-[11px] text-slate-400">RB INDUSTRIALE • Espace Responsable Commercial</p>
             </div>
           </div>
           <button 

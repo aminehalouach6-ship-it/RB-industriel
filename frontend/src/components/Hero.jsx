@@ -9,8 +9,11 @@ import {
   Flame,
   CheckCircle2
 } from 'lucide-react';
+import { useCompany } from '../context/CompanyContext';
 
 export default function Hero({ onOpenFlyer }) {
+  const { company } = useCompany();
+
   return (
     <section className="relative pt-10 sm:pt-16 pb-16 lg:pb-24 overflow-hidden bg-[#FAF7F2]">
       
@@ -27,7 +30,7 @@ export default function Hero({ onOpenFlyer }) {
             <div className="flex items-center gap-3">
               <span className="w-8 h-[2px] bg-[#C3643B]"></span>
               <span className="text-[11px] font-bold text-[#637067] tracking-[0.2em] uppercase">
-                TENIRA TRAVAUX ── GAZ INDUSTRIELS &amp; SOUDAGE
+                {company.company_name || "RB INDUSTRIEL"} ── GAZ INDUSTRIELS &amp; SOUDAGE
               </span>
             </div>
 
@@ -123,12 +126,12 @@ export default function Hero({ onOpenFlyer }) {
               </a>
 
               <a
-                href="https://wa.me/212661490495"
+                href={`https://wa.me/${(company?.whatsapp_phone || '212700950064').replace(/[^0-9]/g, '').replace(/^0/, '212')}`}
                 target="_blank"
                 rel="noreferrer"
                 className="px-6 py-3.5 rounded-full bg-[#EBF4EE] hover:bg-[#DFEDE3] text-[#134D2E] font-bold text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer"
               >
-                <span>WhatsApp M. Rachid BOUZAYD</span>
+                <span>WhatsApp {company?.manager_name ? `M. ${company.manager_name}` : "M. Rachid BOUZAYD"}</span>
                 <ArrowUpRight className="w-4 h-4" />
               </a>
 
@@ -175,7 +178,7 @@ export default function Hero({ onOpenFlyer }) {
                 {/* Book Center Typography (Identical to "DEUTSCH PRÜFUNG VORBEREITUNG") */}
                 <div className="space-y-1 text-center py-4">
                   <h3 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#FAF7F2] leading-tight">
-                    TENIRA<br />TRAVAUX
+                    RB<br />INDUSTRIEL
                   </h3>
                   <div className="w-10 h-[2px] bg-[#C3643B] mx-auto my-3"></div>
                   <p className="text-xs sm:text-sm font-bold tracking-wider text-emerald-300 font-sans uppercase">
@@ -188,7 +191,7 @@ export default function Hero({ onOpenFlyer }) {
 
                 {/* Book Bottom details */}
                 <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-white/70 font-mono">
-                  <span>RACHID BOUZAYD</span>
+                  <span>{company.manager_name || "RACHID BOUZAYD"}</span>
                   <span className="text-emerald-400 font-bold group-hover:underline">VOIR AFFICHE 🔍</span>
                 </div>
 

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { X, CheckCircle, MessageCircle, Truck, ShieldCheck, Send } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useCompany } from '../context/CompanyContext';
 import { submitOrder } from '../services/api';
 
 export default function CODOrderModal() {
   const { isCodModalOpen, codProduct, closeCodModal } = useCart();
+  const { company } = useCompany();
   const [customer, setCustomer] = useState({
     name: '',
     phone: '',
@@ -56,7 +58,14 @@ export default function CODOrderModal() {
   };
 
   const getWhatsUrl = () => {
-    const text = `*COMMANDE DIRECTE - TENIRA TRAVAUX*\n` +
+    const raw = company?.whatsapp_phone || "212700950064";
+    let phone = raw.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
+      phone = '212' + phone.slice(1);
+    }
+    const cName = company?.company_name || 'RB INDUSTRIEL';
+    const mgr = company?.manager_name || 'Rachid BOUZAYD';
+    const text = `*COMMANDE DIRECTE - ${cName}*\n` +
       `--------------------------------------\n` +
       `*Article:* ${codProduct.name} (${codProduct.unit})\n` +
       `*Quantité:* ${customer.quantity}\n` +
@@ -67,8 +76,8 @@ export default function CODOrderModal() {
       `*Adresse:* ${customer.address || 'À préciser'}\n` +
       `*Réf:* ${confirmedOrder?.order_reference || 'DIRECT'}\n` +
       `--------------------------------------\n` +
-      `Envoyé à M. Rachid BOUZAYD (Gérant Tenira Travaux)`;
-    return `https://wa.me/212661490495?text=${encodeURIComponent(text)}`;
+      `Envoyé à M. ${mgr} (Gérant ${cName})`;
+    return `https://wa.me/${phone || '212700950064'}?text=${encodeURIComponent(text)}`;
   };
 
   return (

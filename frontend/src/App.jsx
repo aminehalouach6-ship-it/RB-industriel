@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
+import { CompanyProvider } from './context/CompanyContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import CODOrderModal from './components/CODOrderModal';
 import MobileBottomBar from './components/MobileBottomBar';
 import FlyerShowcaseModal from './components/FlyerShowcaseModal';
-import FloatingWhatsApp from './components/FloatingWhatsApp';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -19,8 +19,9 @@ export default function App() {
   const [isFlyerOpen, setIsFlyerOpen] = useState(false);
 
   return (
-    <CartProvider>
-      <BrowserRouter>
+    <CompanyProvider>
+      <CartProvider>
+        <BrowserRouter>
         <div className="min-h-screen flex flex-col bg-[#FAF7F2] text-[#141E18] font-sans selection:bg-[#0D3823] selection:text-white pb-14 lg:pb-0">
           
           {/* Global Navbar */}
@@ -52,11 +53,9 @@ export default function App() {
           {/* Mobile Dock Bar */}
           <MobileBottomBar />
 
-          {/* Permanent Floating WhatsApp */}
-          <FloatingWhatsApp />
-
         </div>
       </BrowserRouter>
     </CartProvider>
+    </CompanyProvider>
   );
 }
