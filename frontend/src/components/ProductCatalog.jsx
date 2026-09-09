@@ -233,7 +233,7 @@ export default function ProductCatalog({ onSelectProduct }) {
                         ) : (
                           <>
                             <ShoppingCart className="w-3.5 h-3.5" />
-                            <span>Au Devis</span>
+                            <span>Au Panier</span>
                           </>
                         )}
                       </button>

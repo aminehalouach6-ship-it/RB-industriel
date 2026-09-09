@@ -182,7 +182,7 @@ export default function ProductDetailPage() {
                 }`}
               >
                 {added ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
-                <span>{added ? 'Ajouté au Devis' : 'Ajouter au Panier'}</span>
+                <span>{added ? 'Ajouté au Panier' : 'Ajouter au Panier'}</span>
               </button>
 
               <button

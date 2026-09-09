@@ -96,7 +96,7 @@ export default function Navbar({ onOpenFlyer }) {
               className="relative flex items-center gap-2 bg-[#0D3823] hover:bg-[#072416] text-white px-4 py-2 rounded-full font-bold text-xs shadow-sm transition hover:shadow-md cursor-pointer"
             >
               <ShoppingCart className="w-4 h-4" />
-              <span className="hidden sm:inline">Devis</span>
+              <span className="hidden sm:inline">Panier</span>
               {cartCount > 0 && (
                 <span className="bg-[#C3643B] text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">
                   {cartCount}

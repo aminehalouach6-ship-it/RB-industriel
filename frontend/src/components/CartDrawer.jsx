@@ -93,7 +93,7 @@ export default function CartDrawer() {
           <div className="p-5 border-b border-[#E8E1D5] bg-[#FAF7F2] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 text-[#0D3823]" />
-              <h2 className="text-base font-bold text-[#141E18]">Mon Devis &amp; Panier</h2>
+              <h2 className="text-base font-bold text-[#141E18]">Mon Panier</h2>
             </div>
             <button 
               onClick={() => setIsCartOpen(false)}
