@@ -35,7 +35,7 @@ export default function Navbar({ onOpenFlyer }) {
               className="w-11 h-11 rounded-full object-cover shadow-sm group-hover:scale-105 transition border border-[#E8E1D5] shrink-0"
             />
             <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tight text-[#141E18]">
+              <span className="text-base sm:text-xl font-black tracking-tight text-[#141E18]">
                 {company.company_name || "RB INDUSTRIEL"}
               </span>
               <span className="text-[10px] text-[#637067] font-medium tracking-wide -mt-1 hidden sm:block">
@@ -61,12 +61,12 @@ export default function Navbar({ onOpenFlyer }) {
           </nav>
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* Admin Studio Link */}
+            {/* Admin Studio Link (Visible in drawer on mobile, button on tablet/desktop) */}
             <Link
               to="/admin"
-              className={`px-3.5 py-1.5 rounded-full text-xs font-black transition flex items-center gap-1.5 ${
+              className={`hidden sm:inline-flex px-3.5 py-1.5 rounded-full text-xs font-black transition items-center gap-1.5 ${
                 location.pathname === '/admin'
                   ? 'bg-[#0D3823] text-white shadow-xs'
                   : 'bg-[#FCF3EE] text-[#C3643B] border border-[#F2D7CB] hover:bg-[#F9E8DE]'
@@ -78,7 +78,7 @@ export default function Navbar({ onOpenFlyer }) {
             {/* Flyer reference modal button */}
             <button
               onClick={onOpenFlyer}
-              className="p-2 text-[#4B574F] hover:text-[#0D3823] hover:bg-[#F4EFE7] rounded-full transition"
+              className="hidden sm:inline-flex p-2 text-[#4B574F] hover:text-[#0D3823] hover:bg-[#F4EFE7] rounded-full transition"
               title="Affiche Officielle"
             >
               <ImageIcon className="w-4 h-4" />
@@ -87,7 +87,7 @@ export default function Navbar({ onOpenFlyer }) {
             {/* Shopping Cart Pill */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative flex items-center gap-2 bg-[#0D3823] hover:bg-[#072416] text-white px-4 py-2 rounded-full font-bold text-xs shadow-sm transition hover:shadow-md cursor-pointer"
+              className="relative flex items-center gap-1.5 sm:gap-2 bg-[#0D3823] hover:bg-[#072416] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-bold text-xs shadow-sm transition hover:shadow-md cursor-pointer"
             >
               <ShoppingCart className="w-4 h-4" />
               <span>Panier</span>

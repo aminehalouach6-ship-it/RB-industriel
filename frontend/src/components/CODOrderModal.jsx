@@ -82,7 +82,7 @@ export default function CODOrderModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-[#E8E1D5] overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-[#E8E1D5] overflow-hidden flex flex-col max-h-[92vh]">
         
         {/* Header */}
         <div className="p-5 border-b border-[#E8E1D5] bg-[#FAF7F2] flex items-center justify-between">

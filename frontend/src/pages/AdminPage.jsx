@@ -647,10 +647,10 @@ export default function AdminPage() {
         </div>
 
         {/* 3. Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-[#E8E1D5] pb-2 text-xs font-bold">
+        <div className="flex items-center gap-2 border-b border-[#E8E1D5] pb-2 text-xs font-bold overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab('orders')}
-            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               activeTab === 'orders' 
                 ? 'bg-[#0D3823] text-white shadow-xs' 
                 : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
@@ -662,7 +662,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('products')}
-            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               activeTab === 'products' 
                 ? 'bg-[#0D3823] text-white shadow-xs' 
                 : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
@@ -674,7 +674,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('quotes')}
-            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               activeTab === 'quotes' 
                 ? 'bg-[#0D3823] text-white shadow-xs' 
                 : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
@@ -686,7 +686,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('company')}
-            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               activeTab === 'company' 
                 ? 'bg-[#0D3823] text-white shadow-xs' 
                 : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
@@ -698,7 +698,7 @@ export default function AdminPage() {
 
           <button
             onClick={() => setActiveTab('security')}
-            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 ${
+            className={`px-5 py-2.5 rounded-full transition cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 ${
               activeTab === 'security' 
                 ? 'bg-[#0D3823] text-white shadow-xs' 
                 : 'text-[#637067] hover:text-[#141E18] hover:bg-white'
@@ -948,7 +948,7 @@ export default function AdminPage() {
 
             {/* Products Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full min-w-[640px] text-left text-xs">
                 <thead>
                   <tr className="text-[10px] uppercase font-bold text-[#8C9890] border-b border-[#F0ECE3]">
                     <th className="pb-3">Produit</th>
@@ -1034,7 +1034,7 @@ export default function AdminPage() {
           <div className="bg-white rounded-3xl border border-[#E8E1D5] p-6 shadow-xs space-y-4">
             <h2 className="text-base font-bold text-[#141E18]">Demandes de Devis Express Reçues</h2>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full min-w-[550px] text-left text-xs">
                 <thead>
                   <tr className="text-[10px] uppercase font-bold text-[#8C9890] border-b border-[#F0ECE3]">
                     <th className="pb-2">Réf Devis</th>

@@ -151,7 +151,7 @@ export default function HomePage({ onOpenFlyer }) {
           </div>
 
           {/* Centered Welcome Title with Editorial Font Pairing */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.14] text-center max-w-3xl mx-auto drop-shadow-xs">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.14] text-center max-w-3xl mx-auto drop-shadow-xs">
             <span className="font-sans font-black text-[#141E18]">Catalogue Gaz</span>{' '}
             <span className="font-serif italic font-medium text-[#C3643B]">&amp;</span><br />
             <span className="font-serif italic font-medium text-[#C3643B]">Matériel</span>{' '}
@@ -557,7 +557,7 @@ export default function HomePage({ onOpenFlyer }) {
               </div>
 
               {/* Map Column (2 spans on desktop) */}
-              <div className="lg:col-span-2 h-[340px] sm:h-[400px] w-full rounded-2xl overflow-hidden border border-[#E8E1D5] shadow-inner relative bg-slate-100">
+              <div className="lg:col-span-2 h-[260px] sm:h-[400px] w-full rounded-2xl overflow-hidden border border-[#E8E1D5] shadow-inner relative bg-slate-100">
                 <iframe
                   title="Localisation Tit Mellil RB INDUSTRIEL"
                   src="https://maps.google.com/maps?q=Tit%20Mellil,%20Casablanca,%20Morocco&t=&z=14&ie=UTF8&iwloc=&output=embed"
