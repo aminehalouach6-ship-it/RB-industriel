@@ -8,14 +8,38 @@ from app.core.database import Base, engine, SessionLocal
 from app.seed_data import seed_database
 from app.api import products, orders, quotes, contact, stats, auth, upload, company
 
+from sqlalchemy import text
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Schema migration pre-check: ensure required columns exist in PostgreSQL
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS icon VARCHAR(50) DEFAULT 'Package';"))
+            conn.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS slug VARCHAR(100);"))
+            conn.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS description TEXT;"))
+            conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS specifications JSON DEFAULT '{}'::json;"))
+            conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS gas_type VARCHAR(50);"))
+            conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS cylinder_sizes VARCHAR(100);"))
+            conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS badge VARCHAR(50);"))
+            conn.execute(text("ALTER TABLE products ADD COLUMN IF NOT EXISTS short_desc VARCHAR(300);"))
+            conn.commit()
+    except Exception as e:
+        # Ignore for SQLite or non-PostgreSQL
+        pass
+
     # Initialize DB tables
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"create_all notice: {e}")
+
     # Seed DB with Tenira Travaux catalog
     db = SessionLocal()
     try:
         seed_database(db)
+    except Exception as e:
+        print(f"seed_database notice: {e}")
     finally:
         db.close()
     yield
