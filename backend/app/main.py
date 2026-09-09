@@ -112,6 +112,24 @@ if DIST_DIR:
     if os.path.isdir(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
+from fastapi.responses import FileResponse, Response
+
+@app.get("/assets/{asset_name:path}", include_in_schema=False)
+async def serve_asset(asset_name: str):
+    if DIST_DIR:
+        file_path = os.path.join(DIST_DIR, "assets", asset_name)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+    # Stale asset requested by cached browser: trigger automatic reload
+    if asset_name.endswith(".js"):
+        return Response(
+            content="console.warn('Stale bundle chunk detected. Auto-reloading latest version...'); window.location.reload();",
+            media_type="application/javascript"
+        )
+    if asset_name.endswith(".css"):
+        return Response(content="", media_type="text/css")
+    return Response(status_code=404)
+
 @app.get("/api/info", tags=["Système"])
 def system_info():
     return {
@@ -132,7 +150,14 @@ async def serve_spa_frontend(full_path: str):
                 return FileResponse(candidate_file)
         index_file = os.path.join(DIST_DIR, "index.html")
         if os.path.isfile(index_file):
-            return FileResponse(index_file)
+            return FileResponse(
+                index_file,
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                    "Pragma": "no-cache",
+                    "Expires": "0"
+                }
+            )
     return {
         "company": "RB INDUSTRIEL",
         "service": "RB INDUSTRIEL Backend API",
