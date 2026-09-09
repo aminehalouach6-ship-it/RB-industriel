@@ -43,7 +43,7 @@ def get_products(
     if in_stock is not None:
         query = query.filter(Product.in_stock == in_stock)
 
-    products = query.offset(skip).limit(limit).all()
+    products = query.order_by(Product.id.desc()).offset(skip).limit(limit).all()
     return products
 
 @router.get("/{product_id_or_slug}", response_model=ProductResponse)
@@ -80,6 +80,7 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db)):
     db.add(product)
     db.commit()
     db.refresh(product)
+    product.category = category
     return product
 
 @router.put("/{product_id}", response_model=ProductResponse)
@@ -87,10 +88,13 @@ def update_product(product_id: int, payload: ProductCreate, db: Session = Depend
     prod = db.query(Product).filter(Product.id == product_id).first()
     if not prod:
         raise HTTPException(status_code=404, detail="Produit introuvable")
+    category = db.query(Category).filter(Category.id == payload.category_id).first()
     for key, value in payload.dict().items():
         setattr(prod, key, value)
     db.commit()
     db.refresh(prod)
+    if category:
+        prod.category = category
     return prod
 
 @router.delete("/{product_id}", status_code=204)

@@ -55,7 +55,7 @@ export default function ProductCatalog({ onSelectProduct }) {
         (item.gas_type && item.gas_type.toLowerCase().includes(searchTerm.toLowerCase()));
 
       return matchCat && matchSearch;
-    });
+    }).sort((a, b) => (b.id || 0) - (a.id || 0));
   }, [products, selectedCategory, searchTerm, categories]);
 
   const handleAddToCart = (product) => {

@@ -316,12 +316,12 @@ export default function AdminPage() {
     });
   }, [orders, orderStatusFilter, orderSearch]);
 
-  // Filtered Products
+  // Filtered Products (ordered newest first)
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const q = productSearch.toLowerCase().trim();
       return !q || p.name.toLowerCase().includes(q) || (p.gas_type && p.gas_type.toLowerCase().includes(q));
-    });
+    }).sort((a, b) => (b.id || 0) - (a.id || 0));
   }, [products, productSearch]);
 
   // Total calculated revenue
@@ -367,11 +367,16 @@ export default function AdminPage() {
         price_estimate: parseFloat(productForm.price_estimate) || 0
       };
 
-      await createProduct(payload);
+      const created = await createProduct(payload);
       showToast('Nouveau produit inséré avec succès dans PostgreSQL !');
       setShowAddModal(false);
       setProductForm(initialProductState);
-      loadAll();
+      
+      // Placer immédiatement le nouveau produit en tête de liste (index 0)
+      if (created && created.id) {
+        setProducts(prev => [created, ...prev.filter(p => p.id !== created.id)]);
+      }
+      await loadAll();
     } catch (err) {
       console.error(err);
       alert(`Erreur création : ${err.message}`);

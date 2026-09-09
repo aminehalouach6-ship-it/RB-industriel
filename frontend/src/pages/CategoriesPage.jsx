@@ -46,6 +46,8 @@ export default function CategoriesPage() {
       list.sort((a, b) => a.price_estimate - b.price_estimate);
     } else if (sortBy === 'price-desc') {
       list.sort((a, b) => b.price_estimate - a.price_estimate);
+    } else {
+      list.sort((a, b) => (b.id || 0) - (a.id || 0));
     }
 
     return list;
@@ -97,7 +99,7 @@ export default function CategoriesPage() {
               onChange={e => setSortBy(e.target.value)}
               className="p-1.5 bg-[#FAF7F2] border border-[#E8E1D5] rounded-lg text-xs font-semibold outline-none"
             >
-              <option value="featured">Recommandés</option>
+              <option value="featured">Nouveautés d'abord</option>
               <option value="price-asc">Prix croissant</option>
               <option value="price-desc">Prix décroissant</option>
             </select>

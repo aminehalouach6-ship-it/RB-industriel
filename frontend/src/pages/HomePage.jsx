@@ -114,7 +114,7 @@ export default function HomePage({ onOpenFlyer }) {
       if (sortBy === 'price_asc') return (a.price_estimate || 0) - (b.price_estimate || 0);
       if (sortBy === 'price_desc') return (b.price_estimate || 0) - (a.price_estimate || 0);
       if (sortBy === 'name') return a.name.localeCompare(b.name);
-      return 0;
+      return (b.id || 0) - (a.id || 0);
     });
   }, [products, selectedCategory, selectedGas, onlyInStock, searchTerm, sortBy, categories]);
 
@@ -219,7 +219,7 @@ export default function HomePage({ onOpenFlyer }) {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-3 py-2 bg-white rounded-full border border-[#E8E1D5] text-xs font-semibold text-[#4B574F] focus:outline-none focus:border-[#0D3823] transition shadow-xs"
               >
-                <option value="featured">Tri : Recommandé</option>
+                <option value="featured">Tri : Nouveautés d'abord</option>
                 <option value="price_asc">Prix : Croissant</option>
                 <option value="price_desc">Prix : Décroissant</option>
                 <option value="name">Nom : A à Z</option>
