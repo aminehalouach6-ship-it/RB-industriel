@@ -315,7 +315,7 @@ export default function HomePage({ onOpenFlyer }) {
         {loading ? (
           <div className="py-24 text-center text-[#637067] text-xs">
             <div className="w-8 h-8 border-3 border-[#0D3823] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-            <p className="font-bold">Chargement des produits depuis PostgreSQL...</p>
+            <p className="font-bold">Chargement des produits...</p>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="py-20 text-center bg-white rounded-3xl border border-[#E8E1D5] p-8 space-y-3">

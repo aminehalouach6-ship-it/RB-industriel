@@ -63,12 +63,6 @@ export default function Navbar({ onOpenFlyer }) {
           {/* Right Action Controls */}
           <div className="flex items-center gap-3">
             
-            {/* Live Database Sync Pill */}
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E8E1D5] text-xs font-semibold text-[#134D2E] shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>PostgreSQL Live</span>
-            </div>
-
             {/* Admin Studio Link */}
             <Link
               to="/admin"
